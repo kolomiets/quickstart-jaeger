@@ -63,6 +63,8 @@ export class JaegerElasticsearchService extends JaegerService {
     const queryService = this.createQueryService(queryTaskDefinition, mergedProps);
 
     this.createListeners(queryService, collectorService);
+    this.enableIngress(collectorService, mergedProps);
+    this.enableIngress(queryService, mergedProps);
 
     this.metricsEndpoints = [
       `${this.loadBalancer.loadBalancerDnsName}:16687`, // query metrics
