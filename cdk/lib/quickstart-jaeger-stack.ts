@@ -18,8 +18,17 @@ import { PrometheusExportService } from './prometheus-export-service'
 const PrometheusWorkstaceArn = 'arn:aws:aps:eu-west-1:367215520538:workspace/ws-04b56509-26d8-40e1-9191-4b08d52340f2'
 const PrometheusWorkspaceRemoteWriteUrl = 'https://aps-workspaces.eu-west-1.amazonaws.com/workspaces/ws-04b56509-26d8-40e1-9191-4b08d52340f2/api/v1/remote_write'
 
-export class CdkStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
+export enum JaegerBackend {
+  InMemory,
+  Elasticsearch
+}
+
+export interface QuickstartJaegerStackProps extends StackProps {
+  readonly storageBackend: JaegerBackend
+}
+
+export class QuickstartJaegerStack extends Stack {
+  constructor(scope: Construct, id: string, props?: QuickstartJaegerStackProps) {
     super(scope, id, props);
 
     const vpc = new ec2.Vpc(this, "jaeger-vpc", {
