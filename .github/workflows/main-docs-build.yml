@@ -11,9 +11,7 @@ jobs:
     name: asciidoc builder
     steps:
     - name: Checkout (main)
-      uses: actions/checkout@v3
-      with:
-        submodules: true
+      uses: actions/checkout@v2
     - name: Get new doc updates
       run: |
         wget https://raw.githubusercontent.com/aws-quickstart/quickstart-documentation-base-common/main/.utils/configure_git_env.sh
