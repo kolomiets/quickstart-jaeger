@@ -119,6 +119,29 @@ Parameters:
     Description: ID of the private subnet in Availability Zone 3 of your existing VPC (e.g., subnet-abd39039).
     Default: ''
     
+# Jaeger parameters
+  JaegerVersion:
+    Type: String
+    Default: '1.32'
+    Description: Version of the Jaeger release.
+  StorageBackend:
+    Type: String
+    Default: 'InMemory'
+    AllowedValues: [ 'InMemory', 'Elasticseach', 'Cassandra' ]
+    Description: Jaeger storage backend.
+  InternalLoadBalancer:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'No'
+    Description: Choose "Yes" to deploy Jaeger load balancer in private subnets.
+  ConfigureContainerInsights:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'Yes'
+    Description: |
+      Choose "No" to disable integration with CloudWatch Container Insights. 
+      Container Insights ensure sperformance metrics are collected to CloudWatch.
+
 # Quickstart location parameters
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
@@ -144,21 +167,8 @@ Parameters:
       forward slash (/).
     Type: String
 
-Rules:
-  SMTPParameters:
-    RuleCondition: !Equals [!Ref SMTPDomain, 'UseExisting']
-    Assertions:
-      - Assert: !Not [!Equals [!Ref SMTPHostName, '']]
-        AssertDescription: "You must provide SMTP host name if you chose to use existing SMTP server."
-  BastionParameters:
-    RuleCondition: !Equals [!Ref ProvisionBastionHost, 'Enabled']
-    Assertions:
-      - Assert: !Not [!Equals [!Ref RemoteAccessCIDR, '']]
-        AssertDescription: "You must provide RemoteAccessCIDR you chose to set ProvisionBastionHost to Enabled."
-
 Conditions:
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
-  EmptyEnvironmentName: !Equals [!Ref EnvironmentName, '']
 
 Resources:
 
@@ -170,6 +180,7 @@ Resources:
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
+        EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
         VPCCIDR: !Ref VPCCIDR
         PublicSubnet1ID: !Ref PublicSubnet1ID
@@ -179,3 +190,7 @@ Resources:
         PrivateSubnet2ID: !Ref PrivateSubnet2ID
         PrivateSubnet3ID: !Ref PrivateSubnet3ID
         JaegerVersion: !Ref JaegerVersion
+        # Quickstart location parameters
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketRegion: !Ref QSS3BucketRegion
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix

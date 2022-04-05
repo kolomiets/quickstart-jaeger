@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys Jaeger ECS service configured to use Elasticsearch storage (TODO)
+
+Parameters:
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    Type: String  
+  PrivateSubnet1ID:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet2ID:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet3ID:
+    Type: String
+    Default: ''
+  ClusterArn:
+    Type: String
+  LoadBalancerArn:
+    Type: String
+  JaegerVersion:
+    Type: String
+
+Conditions:
+  Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
+
+Resources:
+
+  logGroup:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain

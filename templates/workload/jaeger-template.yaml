@@ -1,4 +1,12 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys a Jaeger distributed tracing backend  (TODO)
+
 Parameters:
+# Basic Configuration
+  EnvironmentName:
+    Type: String
+
+# VPC parameters
   VPCID:
     Type: AWS::EC2::VPC::Id
     Description: ID of your existing VPC (e.g., vpc-0343606e).
@@ -28,12 +36,38 @@ Parameters:
     Type: String
     Description: ID of the private subnet in Availability Zone 3 of your existing VPC (e.g., subnet-abd39039).
     Default: ''
+
+# Jaeger parameters
   JaegerVersion:
     Type: String
-    Description: Version of the Jaeger release.
+  StorageBackend:
+    Type: String
+    AllowedValues: [ 'InMemory', 'Elasticseach', 'Cassandra' ]
+  InternalLoadBalancer:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+  ConfigureContainerInsights:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+
+# Quickstart location parameters
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    Type: String
+  QSS3BucketRegion:
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    Type: String
 
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+  ConfigureContainerInsights: !Equals [!Ref ConfigureContainerInsights, 'Yes']
+  InternalLoadBalancer: !Equals [!Ref InternalLoadBalancer, 'Yes']
+
+  InMemoryStorage: !Equals [!Ref StorageBackend, 'InMemory']
+  ElasticseachStorage: !Equals [!Ref StorageBackend, 'Elasticseach']
 
 Resources:
 
@@ -43,14 +77,14 @@ Resources:
       ClusterName: jaeger-cluster
       ClusterSettings:
         - Name: containerInsights
-          Value: enabled
+          Value: !If [ConfigureContainerInsights, enabled, disabled]
 
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Name: jaeger-lb
       Type: network
-      Scheme: internet-facing
+      Scheme: !If [InternalLoadBalancer, internet-facing, internal] 
       Subnets:
         - !Ref PublicSubnet1ID
         - !Ref PublicSubnet2ID
@@ -61,9 +95,28 @@ Resources:
 
   InMemoryStack:
     Type: AWS::CloudFormation::Stack
+    Condition: InMemoryStorage
     Properties:
       TemplateURL: !Sub
-        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/workload/jaeger-in-memory-template.yaml'
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/workload/jaeger-storage-inmemory-template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        VPCID: !Ref VPCID
+        VPCCIDR: !Ref VPCCIDR
+        PrivateSubnet1ID: !Ref PrivateSubnet1ID
+        PrivateSubnet2ID: !Ref PrivateSubnet2ID
+        PrivateSubnet3ID: !Ref PrivateSubnet3ID
+        ClusterArn: !GetAtt Cluster.Arn
+        LoadBalancerArn: !Ref LoadBalancer
+        JaegerVersion: !Ref JaegerVersion
+
+  ElasticsearchStack:
+    Type: AWS::CloudFormation::Stack
+    Condition: ElasticseachStorage
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/workload/jaeger-storage-elasticsearch-template.yaml'
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
