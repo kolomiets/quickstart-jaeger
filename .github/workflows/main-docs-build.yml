@@ -11,14 +11,16 @@ jobs:
     name: asciidoc builder
     steps:
     - name: Checkout (main)
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+      with:
+        submodules: true
     - name: Get new doc updates
       run: |
         wget https://raw.githubusercontent.com/aws-quickstart/quickstart-documentation-base-common/main/.utils/configure_git_env.sh
         chmod +x configure_git_env.sh
         ./configure_git_env.sh
     - name: Setup python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: 3.8
     - name: Generate dynamic content.
