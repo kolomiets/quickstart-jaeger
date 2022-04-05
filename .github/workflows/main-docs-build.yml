@@ -26,10 +26,11 @@ jobs:
     - name: Generate dynamic content.
       run: ./docs/boilerplate/.utils/generate_dynamic_content.sh
     - name: Run local actions
-      id: adoc
-      uses: ./docs/boilerplate/.actions/asciidoctor-action
-      with:
-        program: "./docs/boilerplate/.utils/build_docs.sh"
+      run: ./docs/boilerplate/.utils/build_docs.sh
+      #id: adoc
+      #uses: ./docs/boilerplate/.actions/asciidoctor-action
+      #with:
+      #  program: "./docs/boilerplate/.utils/build_docs.sh"
     - name: Stage and Push changes to gh-pages branch.
       run: ./docs/boilerplate/.utils/commit_and_push_to_ghpages.sh
       env:
