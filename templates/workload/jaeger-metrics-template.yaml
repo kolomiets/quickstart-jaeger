@@ -1,0 +1,14 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys Jaeger integration with Amazon Managed Service for Prometheus (TODO)
+
+Parameters:
+# Basic Configuration
+  EnvironmentName:
+    Type: String
+
+Resources:
+  APSWorkspace:
+    Type: AWS::APS::Workspace
+    Properties:
+      Alias: !Sub jaeger-${EnvironmentName}-workspace

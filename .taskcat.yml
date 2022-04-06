@@ -1,0 +1,25 @@
+project:
+  name: quickstart-jaeger
+  shorten_stack_name: true
+  template: templates/jaeger-entry-new-vpc.template.yaml
+  parameters:
+    QSS3BucketName: $[taskcat_autobucket]
+    QSS3BucketRegion: us-east-1
+    QSS3KeyPrefix: quickstart-jaeger/
+  s3_bucket: tcat-quickstart-jaeger-e44i37mw
+
+tests:
+
+  deploy-in-2-az-with-defaults:
+    parameters:
+      AvailabilityZones: $[taskcat_genaz_2]
+      NumberOfAZs: 2
+    regions:
+    - eu-west-1
+
+  deploy-in-3-az-with-defaults:
+    parameters:
+      AvailabilityZones: $[taskcat_genaz_3]
+      NumberOfAZs: 3
+    regions:
+    - us-east-1

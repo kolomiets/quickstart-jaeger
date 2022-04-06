@@ -1,0 +1,196 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys a Jaeger distributed tracing backend into an existing VPC (TODO)
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - E0002
+  QuickStartDocumentation:
+    EntrypointName: "Launch into an existing VPC"
+    Order: Index b
+  LintSpellExclude:
+    - Docker
+    - Jaeger
+    - Resource Name
+    - Container Insights
+    - Route 53
+    - Certificate Manager
+    - '"No"'
+    - '"Yes"'
+    - '"Enabled"'
+    - namespace
+    - cron
+    - vpc
+    - kubectl
+    - dind
+    - Gb
+    - Multi-AZ
+    - External
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Basic configuration
+        Parameters:
+          - EnvironmentName
+      - Label:
+          default: VPC network configuration
+        Parameters:
+          - VPCID
+          - VPCCIDR
+          - PrivateSubnet1ID
+          - PrivateSubnet2ID
+          - PrivateSubnet3ID
+          - PublicSubnet1ID
+          - PublicSubnet2ID
+          - PublicSubnet3ID
+      - Label:
+          default: AWS Quick Start configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+          - QSS3BucketRegion
+    ParameterLabels:
+    # Basic configuration
+      EnvironmentName:
+        default: Environment name
+    # VPC network configuration
+      VPCID:
+        default: VPC ID
+      VPCCIDR:
+        default: VPC CIDR
+      PublicSubnet1ID:
+        default: Public subnet 1 ID
+      PublicSubnet2ID:
+        default: Public subnet 2 ID
+      PublicSubnet3ID:
+        default: Public subnet 3 ID
+      PrivateSubnet1ID:
+        default: Private subnet 1 ID
+      PrivateSubnet2ID:
+        default: Private subnet 2 ID
+      PrivateSubnet3ID:
+        default: Private subnet 3 ID
+    # AWS Quick Start configuration
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3BucketRegion:
+        default: Quick Start S3 bucket region
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
+
+Parameters:
+
+# Basic Configuration
+  EnvironmentName:
+    Type: String
+    Default: ''
+    Description: |
+      Name of the Jaeger environment (leave empty to use dynamically generated name).
+      Environment name is used to generate unique resource names.
+      Multiple Jaeger environments with different names can be deployed in the same region.
+
+# VPC parameters
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+    Description: ID of your existing VPC (e.g., vpc-0343606e).
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Description: CIDR block for the VPC.
+    Type: String
+  PublicSubnet1ID:
+    Type: AWS::EC2::Subnet::Id
+    Description: ID of the public subnet in Availability Zone 1 of your existing VPC (e.g., subnet-a0246ccd).
+  PublicSubnet2ID:
+    Type: AWS::EC2::Subnet::Id
+    Description: ID of the public subnet in Availability Zone 2 of your existing VPC (e.g., subnet-b1236eea).
+  PublicSubnet3ID:
+    Type: String
+    Description: ID of the public subnet in Availability Zone 3 of your existing VPC (e.g., subnet-c3456aba).
+    Default: ''
+  PrivateSubnet1ID:
+    Type: AWS::EC2::Subnet::Id
+    Description: ID of the private subnet in Availability Zone 1 of your existing VPC (e.g., subnet-fe9a8b32).
+  PrivateSubnet2ID:
+    Type: AWS::EC2::Subnet::Id
+    Description: ID of the private subnet in Availability Zone 2 of your existing VPC (e.g., subnet-be8b01ea).
+  PrivateSubnet3ID:
+    Type: String
+    Description: ID of the private subnet in Availability Zone 3 of your existing VPC (e.g., subnet-abd39039).
+    Default: ''
+    
+# Jaeger parameters
+  JaegerVersion:
+    Type: String
+    Default: '1.32'
+    Description: Version of the Jaeger release.
+  StorageBackend:
+    Type: String
+    Default: 'InMemory'
+    AllowedValues: [ 'InMemory', 'Elasticseach', 'Cassandra' ]
+    Description: Jaeger storage backend.
+  InternalLoadBalancer:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'No'
+    Description: Choose "Yes" to deploy Jaeger load balancer in private subnets.
+  ConfigureContainerInsights:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'Yes'
+    Description: |
+      Choose "No" to disable integration with CloudWatch Container Insights. 
+      Container Insights ensure sperformance metrics are collected to CloudWatch.
+
+# Quickstart location parameters
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: aws-quickstart
+    Description: S3 bucket name for the Quick Start assets. This string can include
+      numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start
+      or end with a hyphen (-).
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/).
+    Default: quickstart-jaeger/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
+      forward slash (/).
+    Type: String
+
+Conditions:
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+
+Resources:
+
+  Jaeger:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/workload/jaeger-template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        VPCID: !Ref VPCID
+        VPCCIDR: !Ref VPCCIDR
+        PublicSubnet1ID: !Ref PublicSubnet1ID
+        PublicSubnet2ID: !Ref PublicSubnet2ID
+        PublicSubnet3ID: !Ref PublicSubnet3ID
+        PrivateSubnet1ID: !Ref PrivateSubnet1ID
+        PrivateSubnet2ID: !Ref PrivateSubnet2ID
+        PrivateSubnet3ID: !Ref PrivateSubnet3ID
+        JaegerVersion: !Ref JaegerVersion
+        # Quickstart location parameters
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketRegion: !Ref QSS3BucketRegion
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
