@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Deploys Jaeger ECS service configured to use Elasticsearch storage (TODO)
 
 Parameters:
+# Basic Configuration
+  EnvironmentName:
+    Type: String
+# VPC parameters
   VPCID:
     Type: AWS::EC2::VPC::Id
   VPCCIDR:
@@ -14,19 +18,488 @@ Parameters:
   PrivateSubnet3ID:
     Type: String
     Default: ''
+# Jaeger parameters
   ClusterArn:
     Type: String
   LoadBalancerArn:
     Type: String
+  LoadBalancerDomainName:
+    Type: String
   JaegerVersion:
     Type: String
+  ExportMetrics:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
 
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
+  ExportMetrics: !Equals [!Ref ExportMetrics, 'Yes']
 
 Resources:
 
-  logGroup:
+# Listeners
+
+  Listener16686:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroup16686
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
+      Port: 16686
+      Protocol: TCP
+
+  Listener16687:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: ExportMetrics
+    Properties:
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroup16687
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
+      Port: 16687
+      Protocol: TCP
+
+  Listener14250:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroup14250
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
+      Port: 14250
+      Protocol: TCP
+
+  Listener14268:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroup14268
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
+      Port: 14268
+      Protocol: TCP
+
+  Listener14269:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: ExportMetrics
+    Properties:
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroup14269
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
+      Port: 14269
+      Protocol: TCP
+
+# Target Groups
+
+  TargetGroup16686:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: jaeger-16686
+      Port: 16686
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+
+  TargetGroup16687:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: ExportMetrics
+    Properties:
+      Name: jaeger-16687
+      Port: 16687
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+
+  TargetGroup14250:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: jaeger-14250
+      Port: 14250
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+
+  TargetGroup14268:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: jaeger-14268
+      Port: 14268
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+
+  TargetGroup14269:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: ExportMetrics
+    Properties:
+      Name: jaeger-14269
+      Port: 14269
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+
+# Search Domain
+
+  SearchDomainSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for domain domain
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      SecurityGroupIngress:
+        - CidrIp: !Ref VPCCIDR
+          Description: Allow ES domain access from within VPC
+          FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
+      VpcId: !Ref VPCID
+
+  SearchDomainMasterUserSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      GenerateSecretString:
+        ExcludeCharacters: "{}'\\*[]()`"
+        GenerateStringKey: password
+        SecretStringTemplate: '{"username":"master-user"}'
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  SearchDomain:
+    Type: AWS::OpenSearchService::Domain
+    Properties:
+      AdvancedSecurityOptions:
+        Enabled: true
+        InternalUserDatabaseEnabled: true
+        MasterUserOptions:
+          MasterUserName: master-user
+          MasterUserPassword: !Sub "{{resolve:secretsmanager:${SearchDomainMasterUserSecret}:SecretString:password::}}"
+      ClusterConfig:
+        DedicatedMasterEnabled: false
+        InstanceCount: 2
+        InstanceType: t3.small.search
+        ZoneAwarenessConfig:
+          AvailabilityZoneCount: 2
+        ZoneAwarenessEnabled: true
+      CognitoOptions:
+        Enabled: false
+      DomainEndpointOptions:
+        EnforceHTTPS: true
+        TLSSecurityPolicy: Policy-Min-TLS-1-0-2019-07
+      DomainName: jaeger-traces
+      EBSOptions:
+        EBSEnabled: true
+        VolumeSize: 10
+        VolumeType: gp2
+      EncryptionAtRestOptions:
+        Enabled: true
+      EngineVersion: Elasticsearch_7.10
+      LogPublishingOptions: {}
+      NodeToNodeEncryptionOptions:
+        Enabled: true
+      VPCOptions:
+        SecurityGroupIds:
+          - !GetAtt SearchDomainSecurityGroup.GroupId
+        SubnetIds:
+          - !Ref PrivateSubnet1ID
+          - !Ref PrivateSubnet2ID
+          - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
+    UpdatePolicy:
+      EnableVersionUpgrade: true
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+# Collector
+
+  CollectorLogGroup:
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
+
+  CollectorTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+      Policies:
+        - PolicyName: jaeger-collector-task-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - es:ESHttpGet
+                  - es:ESHttpHead
+                  - es:ESHttpDelete
+                  - es:ESHttpPost
+                  - es:ESHttpPut
+                  - es:ESHttpPatch
+                Effect: Allow
+                Resource:  
+                  - !GetAtt SearchDomain.Arn
+                  - !Sub "${SearchDomain.Arn}/*"
+
+  CollectorExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+      Policies:
+        - PolicyName: jaeger-collector-execution-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: !GetAtt CollectorLogGroup.Arn
+              - Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Effect: Allow
+                Resource: !Ref SearchDomainMasterUserSecret
+
+  CollectorTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub quickstart-jaeger-collector-${EnvironmentName}
+      ContainerDefinitions:
+        - Name: jaeger-collector
+          Environment:
+            - Name: SPAN_STORAGE_TYPE
+              Value: elasticsearch
+            - Name: ES_SERVER_URLS
+              Value: !Sub "https://${SearchDomain.DomainEndpoint}"
+            - Name: ES_USERNAME
+              Value: master-user
+          Essential: true
+          Image: !Sub jaegertracing/jaeger-collector:${JaegerVersion}
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref CollectorLogGroup
+              awslogs-stream-prefix: jaeger-collector
+              awslogs-region: !Ref AWS::Region
+          PortMappings:
+            - ContainerPort: 9411
+              Protocol: tcp
+            - ContainerPort: 14250
+              Protocol: tcp
+            - ContainerPort: 14268
+              Protocol: tcp
+            - ContainerPort: 14269
+              Protocol: tcp
+          Secrets:
+            - Name: ES_PASSWORD
+              ValueFrom: !Sub "${SearchDomainMasterUserSecret}:password::"
+      Cpu: "1024"
+      TaskRoleArn: !GetAtt CollectorTaskRole.Arn
+      ExecutionRoleArn: !GetAtt CollectorExecutionRole.Arn
+      Memory: "2048"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      
+  CollectorService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ClusterArn
+      ServiceName: jaeger-collector
+      TaskDefinition: !Ref CollectorTaskDefinition
+      DesiredCount: 2
+      HealthCheckGracePeriodSeconds: 30
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: jaeger-collector
+          ContainerPort: 14250
+          TargetGroupArn: !Ref TargetGroup14250
+        - ContainerName: jaeger-collector
+          ContainerPort: 14268
+          TargetGroupArn: !Ref TargetGroup14268
+        - !If 
+          - ExportMetrics
+          - ContainerName: jaeger-collector
+            ContainerPort: 14269
+            TargetGroupArn: !Ref TargetGroup14269
+          - !Ref "AWS::NoValue"
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: !GetAtt CollectorServiceSecurityGroup.GroupId
+          Subnets:
+            - !Ref PrivateSubnet1ID
+            - !Ref PrivateSubnet2ID
+            - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
+    DependsOn:
+      - Listener14250
+      - Listener14268
+      # - Listener14269
+
+  CollectorServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: quickstart-jaeger/jaeger/jaeger-collector-service/SecurityGroup
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      SecurityGroupIngress:
+        - CidrIp: !Ref VPCCIDR
+          Description: Allow ECS Service access from within VPC
+          FromPort: 0
+          IpProtocol: tcp
+          ToPort: 65535
+      VpcId: !Ref VPCID
+
+# Query
+
+  QueryLogGroup:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+
+  QueryTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: "2012-10-17"
+
+  QueryExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+      Policies:
+        - PolicyName: jaeger-query-execution-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: !GetAtt QueryLogGroup.Arn
+              - Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Effect: Allow
+                Resource: !Ref SearchDomainMasterUserSecret
+
+  QueryTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub quickstart-jaeger-query-${EnvironmentName}
+      ContainerDefinitions:
+        - Name: jaeger-query
+          Environment:
+            - Name: SPAN_STORAGE_TYPE
+              Value: elasticsearch
+            - Name: ES_SERVER_URLS
+              Value: !Sub "https://${SearchDomain.DomainEndpoint}"
+            - Name: ES_USERNAME
+              Value: master-user
+          Essential: true
+          Image: !Sub jaegertracing/jaeger-query:${JaegerVersion}
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref QueryLogGroup
+              awslogs-stream-prefix: jaeger-query
+              awslogs-region: !Ref AWS::Region
+          PortMappings:
+            - ContainerPort: 16685
+              Protocol: tcp
+            - ContainerPort: 16686
+              Protocol: tcp
+            - ContainerPort: 16687
+              Protocol: tcp
+          Secrets:
+            - Name: ES_PASSWORD
+              ValueFrom: !Sub "${SearchDomainMasterUserSecret}:password::"
+      Cpu: "1024"
+      TaskRoleArn: !GetAtt QueryTaskRole.Arn
+      ExecutionRoleArn: !GetAtt QueryExecutionRole.Arn
+      Memory: "2048"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+
+  QueryService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ClusterArn
+      ServiceName: jaeger-query
+      TaskDefinition: !Ref QueryTaskDefinition
+      DesiredCount: 2
+      HealthCheckGracePeriodSeconds: 30
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: jaeger-query
+          ContainerPort: 16686
+          TargetGroupArn: !Ref TargetGroup16686
+        - !If 
+          - ExportMetrics
+          - ContainerName: jaeger-query
+            ContainerPort: 16687
+            TargetGroupArn: !Ref TargetGroup16687
+          - !Ref "AWS::NoValue"
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !GetAtt QueryServiceSecurityGroup.GroupId
+          Subnets:
+            - !Ref PrivateSubnet1ID
+            - !Ref PrivateSubnet2ID
+            - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
+    DependsOn:
+      - Listener16686
+      # - Listener16687
+
+  QueryServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: quickstart-jaeger/jaeger/jaeger-query-service/SecurityGroup
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      SecurityGroupIngress:
+        - CidrIp: !Ref VPCCIDR
+          Description: Allow ECS Service access from within VPC
+          FromPort: 0
+          IpProtocol: tcp
+          ToPort: 65535
+      VpcId: !Ref VPCID
+
+Outputs:
+  ScrapeTargets:
+    Value: !Sub "${LoadBalancerDomainName}:14269,${LoadBalancerDomainName}:16687"
