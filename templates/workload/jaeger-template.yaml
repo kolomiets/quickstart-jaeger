@@ -50,6 +50,38 @@ Parameters:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
 
+# Metrics Scrape parameters
+  ExportMetrics:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+  ScrapeIntervalSeconds:  
+    Type: Number
+  ScrapeTimeoutSeconds:
+    Type: Number
+  ClusterMetricsCollectionInterval: 
+    Type: Number
+
+# DNS parameters
+  DomainName:
+    Type: String
+  SubdomainName:
+    Type: String
+  PublicDNS:
+    Type: String
+    AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
+  PublicHostedZoneId:
+    Type: String
+  PrivateDNS:
+    Type: String
+    AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
+  PrivateHostedZoneId:
+    Type: String
+  Certificate:
+    Type: String
+    AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
+  CertificateArn:
+    Type: String
+
 # Quickstart location parameters
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
@@ -65,6 +97,7 @@ Conditions:
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
   ConfigureContainerInsights: !Equals [!Ref ConfigureContainerInsights, 'Yes']
   InternalLoadBalancer: !Equals [!Ref InternalLoadBalancer, 'Yes']
+  ExportMetrics: !Equals [!Ref ExportMetrics, 'Yes']
 
   InMemoryStorage: !Equals [!Ref StorageBackend, 'InMemory']
   ElasticseachStorage: !Equals [!Ref StorageBackend, 'Elasticseach']
@@ -84,7 +117,7 @@ Resources:
     Properties:
       Name: jaeger-lb
       Type: network
-      Scheme: !If [InternalLoadBalancer, internet-facing, internal] 
+      Scheme: !If [InternalLoadBalancer, internal, internet-facing] 
       Subnets:
         - !Ref PublicSubnet1ID
         - !Ref PublicSubnet2ID
@@ -92,6 +125,27 @@ Resources:
       LoadBalancerAttributes:
         - Key: deletion_protection.enabled
           Value: "false"
+
+  DNSStack:
+    Type: AWS::CloudFormation::Stack
+    Condition: InMemoryStorage
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/workload/jaeger-dns-template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        VPCID: !Ref VPCID
+        DomainName: !Ref DomainName
+        SubdomainName: !Ref SubdomainName
+        PublicDNS: !Ref PublicDNS
+        PublicHostedZoneId: !Ref PublicHostedZoneId
+        PrivateDNS: !Ref PrivateDNS
+        PrivateHostedZoneId: !Ref PrivateHostedZoneId
+        Certificate: !Ref Certificate
+        CertificateArn: !Ref CertificateArn
+        TargetHostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
+        TargetDNSName: !GetAtt LoadBalancer.DNSName
 
   InMemoryStack:
     Type: AWS::CloudFormation::Stack
@@ -102,6 +156,7 @@ Resources:
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
+        EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
         VPCCIDR: !Ref VPCCIDR
         PrivateSubnet1ID: !Ref PrivateSubnet1ID
@@ -111,6 +166,8 @@ Resources:
         LoadBalancerArn: !Ref LoadBalancer
         LoadBalancerDomainName: !GetAtt LoadBalancer.DNSName
         JaegerVersion: !Ref JaegerVersion
+        ExportMetrics: !Ref ExportMetrics
+        CertificateArn: !GetAtt DNSStack.Outputs.CertificateArn
 
   ElasticsearchStack:
     Type: AWS::CloudFormation::Stack
@@ -121,6 +178,7 @@ Resources:
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
+        EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
         VPCCIDR: !Ref VPCCIDR
         PrivateSubnet1ID: !Ref PrivateSubnet1ID
@@ -130,9 +188,11 @@ Resources:
         LoadBalancerArn: !Ref LoadBalancer
         LoadBalancerDomainName: !GetAtt LoadBalancer.DNSName
         JaegerVersion: !Ref JaegerVersion
+        ExportMetrics: !Ref ExportMetrics
 
   MetricsStack:
     Type: AWS::CloudFormation::Stack
+    Condition: ExportMetrics
     Properties:
       TemplateURL: !Sub
         - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/workload/jaeger-metrics-template.yaml'
@@ -153,3 +213,6 @@ Resources:
                 - ElasticseachStorage
                 - !GetAtt ElasticsearchStack.Outputs.ScrapeTargets
                 - !Ref "AWS::NoValue"
+        ScrapeIntervalSeconds: !Ref ScrapeIntervalSeconds
+        ScrapeTimeoutSeconds: !Ref ScrapeTimeoutSeconds
+        ClusterMetricsCollectionInterval: !Ref ClusterMetricsCollectionInterval

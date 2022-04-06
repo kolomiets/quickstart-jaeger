@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Performs Jaeger DNS configuration (TODO)
+
+Parameters:
+# VPC parameters
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+# DNS parameters
+  DomainName:
+    Type: String
+  SubdomainName:
+    Type: String
+  PublicDNS:
+    Type: String
+    AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
+  PublicHostedZoneId:
+    Type: String
+  PrivateDNS:
+    Type: String
+    AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
+  PrivateHostedZoneId:
+    Type: String
+# Certificate parameters
+  Certificate:
+    Type: String
+    AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
+  CertificateArn:
+    Type: String
+# Target parameters
+  TargetHostedZoneId: 
+    Type: String
+  TargetDNSName: 
+    Type: String    
+
+Conditions:
+  CreateCertificate: !Equals [!Ref Certificate, 'CreateNew']
+
+  PublicDNSRequested: !Not [!Equals [!Ref PublicDNS, 'Disabled']]
+  UsePublicHostedZone: !Equals [!Ref PublicDNS, 'UseExisting']
+  CreatePublicHostedZone: !Equals [!Ref PublicDNS, 'CreateNew']
+
+  PrivateDNSRequested: !Not [!Equals [!Ref PrivateDNS, 'Disabled']]
+  UsePrivateHostedZone: !Equals [!Ref PrivateDNS, 'UseExisting']
+  CreatePrivateHostedZone: !Equals [!Ref PrivateDNS, 'CreateNew']
+
+Resources:
+
+# ACM certificate
+  TlsCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Condition: CreateCertificate 
+    Properties:
+      DomainName: !Sub "${SubdomainName}.${DomainName}"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Sub "${SubdomainName}.${DomainName}"
+          HostedZoneId: 
+            !If 
+              - UsePublicHostedZone
+              - !Ref PublicHostedZoneId
+              - !If 
+                  - CreatePublicHostedZone
+                  - !Ref PublicHostedZone
+                  - !Ref "AWS::NoValue"
+
+# Public DNS
+  PublicHostedZone: 
+    Type: AWS::Route53::HostedZone
+    Condition: CreatePublicHostedZone
+    Properties: 
+      Name: !Sub "${DomainName}."
+  PublicDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: PublicDNSRequested
+    Metadata: { cfn-lint: { config: { ignore_checks: [E2523] } } }
+    Properties:
+      HostedZoneId:
+        !If 
+          - UsePublicHostedZone
+          - !Ref PublicHostedZoneId
+          - !If 
+              - CreatePublicHostedZone
+              - !Ref PublicHostedZone
+              - !Ref "AWS::NoValue"
+      Comment: DNS name for Jaeger Query service.
+      Name: !Sub "${SubdomainName}.${DomainName}"
+      Type: A
+      AliasTarget:
+        HostedZoneId: !Ref TargetHostedZoneId
+        DNSName: !Ref TargetDNSName
+
+# Private DNS
+  PrivateHostedZone: 
+    Type: AWS::Route53::HostedZone
+    Condition: CreatePrivateHostedZone
+    Properties: 
+      Name: !Sub "${DomainName}."
+      VPCs:
+        - VPCId: !Ref VPCID
+          VPCRegion: !Ref 'AWS::Region'
+  PrivateDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: PrivateDNSRequested
+    Metadata: { cfn-lint: { config: { ignore_checks: [E2523] } } }
+    Properties:
+      HostedZoneId:
+        !If 
+          - UsePrivateHostedZone
+          - !Ref PrivateHostedZoneId
+          - !If 
+              - CreatePrivateHostedZone
+              - !Ref PrivateHostedZone
+              - !Ref "AWS::NoValue"
+      Comment: DNS name for Jaeger Query service.
+      Name: !Sub "${SubdomainName}.${DomainName}"
+      Type: A
+      AliasTarget:
+        HostedZoneId: !Ref TargetHostedZoneId
+        DNSName: !Ref TargetDNSName
+
+Outputs:
+  CertificateArn: 
+    Value: !If [CreateCertificate, !Ref TlsCertificate, !Ref CertificateArn]

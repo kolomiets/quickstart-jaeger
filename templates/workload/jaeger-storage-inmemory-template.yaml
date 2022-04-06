@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Deploys Jaeger ECS service configured to use in-memory storage (TODO)
 
 Parameters:
+# Basic Configuration
+  EnvironmentName:
+    Type: String
+# VPC parameters
   VPCID:
     Type: AWS::EC2::VPC::Id
     Description: ID of your existing VPC (e.g., vpc-0343606e).
@@ -15,17 +19,26 @@ Parameters:
   PrivateSubnet3ID:
     Type: String
     Default: ''
+# Jaeger parameters
   ClusterArn:
-    Type: String
-  LoadBalancerDomainName:
     Type: String
   LoadBalancerArn:
     Type: String
+  LoadBalancerDomainName:
+    Type: String
   JaegerVersion:
+    Type: String
+  ExportMetrics:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+  CertificateArn:
     Type: String
 
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
+  ExportMetrics: !Equals [!Ref ExportMetrics, 'Yes']
+  CertificateProvided: !Not [!Equals [!Ref CertificateArn, '']]
+  NoCertificateProvided: !Equals [!Ref CertificateArn, '']
 
 Resources:
 
@@ -50,6 +63,7 @@ Resources:
 
   TargetGroup14269:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: ExportMetrics
     Properties:
       Name: jaeger-14269
       Port: 14269
@@ -57,11 +71,22 @@ Resources:
       TargetType: ip
       VpcId: !Ref VPCID
 
-  TargetGroup16686:
+  TargetGroupHttp:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: NoCertificateProvided
     Properties:
-      Name: jaeger-16686
-      Port: 16686
+      Name: jaeger-http
+      Port: 80
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+
+  TargetGroupHttps:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: CertificateProvided
+    Properties:
+      Name: jaeger-https
+      Port: 443
       Protocol: TCP
       TargetType: ip
       VpcId: !Ref VPCID
@@ -91,6 +116,7 @@ Resources:
 
   Listener14269:
     Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: ExportMetrics
     Properties:
       DefaultActions:
         - TargetGroupArn:
@@ -100,16 +126,31 @@ Resources:
       Port: 14269
       Protocol: TCP
   
-  Listener16686:
+  HttpListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: NoCertificateProvided
     Properties:
       DefaultActions:
         - TargetGroupArn:
-            Ref: TargetGroup16686
+            Ref: TargetGroupHttp
           Type: forward
       LoadBalancerArn: !Ref LoadBalancerArn
-      Port: 16686
+      Port: 80
       Protocol: TCP
+
+  HttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: CertificateProvided
+    Properties:
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroupHttps
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
+      Port: 443
+      Protocol: TLS
+      Certificates:
+        - CertificateArn: !Ref CertificateArn
 
 # Roles
   TaskRole:
@@ -138,11 +179,11 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-          - Action:
-              - logs:CreateLogStream
-              - logs:PutLogEvents
-            Effect: Allow
-            Resource: !GetAtt LogGroup.Arn
+              - Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: !GetAtt LogGroup.Arn
 
 # Task Definition
   LogGroup:
@@ -153,6 +194,7 @@ Resources:
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
+      Family: !Sub quickstart-jaeger-all-in-one-${EnvironmentName}
       ContainerDefinitions:
         - Name: jaeger-all-in-one
           Essential: true
@@ -183,7 +225,6 @@ Resources:
               Value: memory
       Cpu: "1024"
       ExecutionRoleArn: !GetAtt ExecutionRole.Arn
-      Family: jaeger-all-in-one-task-definition
       Memory: "2048"
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -202,20 +243,19 @@ Resources:
       LoadBalancers:
         - ContainerName: jaeger-all-in-one
           ContainerPort: 16686
-          TargetGroupArn:
-            Ref: TargetGroup16686
+          TargetGroupArn: !If [CertificateProvided, !Ref TargetGroupHttps, !Ref TargetGroupHttp]
         - ContainerName: jaeger-all-in-one
           ContainerPort: 14250
-          TargetGroupArn:
-            Ref: TargetGroup14250
+          TargetGroupArn: !Ref TargetGroup14250
         - ContainerName: jaeger-all-in-one
           ContainerPort: 14268
-          TargetGroupArn:
-            Ref: TargetGroup14268
-        - ContainerName: jaeger-all-in-one
-          ContainerPort: 14269
-          TargetGroupArn:
-            Ref: TargetGroup14269
+          TargetGroupArn: !Ref TargetGroup14268
+        - !If 
+          - ExportMetrics
+          - ContainerName: jaeger-all-in-one
+            ContainerPort: 14269
+            TargetGroupArn: !Ref TargetGroup14269
+          - !Ref "AWS::NoValue"
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
@@ -229,8 +269,7 @@ Resources:
     DependsOn:
       - Listener14250
       - Listener14268
-      - Listener14269
-      - Listener16686
+      # - Listener14269
 
   ServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup

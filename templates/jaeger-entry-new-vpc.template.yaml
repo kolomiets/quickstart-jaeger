@@ -172,6 +172,59 @@ Parameters:
       Choose "No" to disable integration with CloudWatch Container Insights. 
       Container Insights ensure sperformance metrics are collected to CloudWatch.
 
+# Metrics Scrape parameters
+  ExportMetrics:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'No'
+    Description: Choose "Yes" to export Jaeger and ECS metrics to Amazon Managed Service for Prometheus workspace.
+  ScrapeIntervalSeconds:  
+    Type: Number
+    Default: 15
+  ScrapeTimeoutSeconds:
+    Type: Number
+    Default: 10
+  ClusterMetricsCollectionInterval: 
+    Type: Number
+    Default: 20
+
+# DNS parameters
+  DomainName:
+    Type: String
+    Description: The domain name for the Jaeger Query service.
+    Default: ''
+  SubdomainName:
+    Type: String
+    Description: The subdomain name for the Jaeger Query service.
+    Default: jaeger
+  PublicDNS:
+    Type: String
+    Description: TODO
+    AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
+    Default: 'Disabled'
+  PublicHostedZoneId:
+    Type: String
+    Description: TODO
+    Default: ''
+  PrivateDNS:
+    Type: String
+    Description: Choose "Yes" if you want to create private DNS entry for Jaeger Query service.
+    AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
+    Default: 'Disabled'
+  PrivateHostedZoneId:
+    Type: String
+    Description: TODO
+    Default: ''
+  Certificate:
+    Type: String
+    Description: TODO
+    AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
+    Default: 'Disabled'  
+  CertificateArn:
+    Type: String
+    Description: TODO
+    Default: ''
+
 # Quickstart location parameters
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
@@ -255,6 +308,20 @@ Resources:
         StorageBackend: !Ref StorageBackend
         InternalLoadBalancer: !Ref InternalLoadBalancer
         ConfigureContainerInsights: !Ref ConfigureContainerInsights
+        # Metrics Scrape parameters
+        ExportMetrics: !Ref ExportMetrics
+        ScrapeIntervalSeconds: !Ref ScrapeIntervalSeconds
+        ScrapeTimeoutSeconds: !Ref ScrapeTimeoutSeconds
+        ClusterMetricsCollectionInterval: !Ref ClusterMetricsCollectionInterval
+        # DNS parameters
+        DomainName: !Ref DomainName
+        SubdomainName: !Ref SubdomainName
+        PublicDNS: !Ref PublicDNS
+        PublicHostedZoneId: !Ref PublicHostedZoneId
+        PrivateDNS: !Ref PrivateDNS
+        PrivateHostedZoneId: !Ref PrivateHostedZoneId
+        Certificate: !Ref Certificate
+        CertificateArn: !Ref CertificateArn
         # Quickstart location parameters
         QSS3BucketName: !Ref QSS3BucketName
         QSS3BucketRegion: !Ref QSS3BucketRegion
