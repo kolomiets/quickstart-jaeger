@@ -18,18 +18,15 @@ Parameters:
 # Jaeger parameters
   ClusterArn:
     Type: String
-# Scrape parameters
+# Metrics Scrape parameters
   ScrapeTargets:
     Type: List<String>
   ScrapeIntervalSeconds:  
     Type: Number
-    Default: 15
   ScrapeTimeoutSeconds:
     Type: Number
-    Default: 10
   ClusterMetricsCollectionInterval: 
     Type: Number
-    Default: 20
 
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
