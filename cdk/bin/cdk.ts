@@ -1,19 +1,9 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { QuickstartJaegerStack, JaegerBackend } from '../lib/quickstart-jaeger-stack';
+import { QuickstartJaegerStack } from '../lib/quickstart-jaeger-stack';
 
 const app = new cdk.App();
-
-// Parameters
-const uploadBucketName = new cdk.CfnParameter(app, "StorageBackend", {
-  type: "String",
-  default: "InMemory",
-  allowedValues: [ "InMemory", "Elasticsearch" ], 
-  description: "Jaeger storage backend."}
-);
-
-const storageBackendType = uploadBucketName.valueAsString as keyof typeof JaegerBackend
 
 new QuickstartJaegerStack(app, 'quickstart-jaeger', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
@@ -29,6 +19,4 @@ new QuickstartJaegerStack(app, 'quickstart-jaeger', {
   // env: { account: '123456789012', region: 'us-east-1' },
 
   /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
-
-  storageBackend: JaegerBackend[storageBackendType],
 });

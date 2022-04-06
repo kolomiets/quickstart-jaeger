@@ -1,4 +1,4 @@
-import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnParameter, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
@@ -18,34 +18,36 @@ import { PrometheusExportService } from './prometheus-export-service'
 const PrometheusWorkstaceArn = 'arn:aws:aps:eu-west-1:367215520538:workspace/ws-04b56509-26d8-40e1-9191-4b08d52340f2'
 const PrometheusWorkspaceRemoteWriteUrl = 'https://aps-workspaces.eu-west-1.amazonaws.com/workspaces/ws-04b56509-26d8-40e1-9191-4b08d52340f2/api/v1/remote_write'
 
-export enum JaegerBackend {
-  InMemory,
-  Elasticsearch
-}
-
-export interface QuickstartJaegerStackProps extends StackProps {
-  readonly storageBackend: JaegerBackend
-}
-
 export class QuickstartJaegerStack extends Stack {
-  constructor(scope: Construct, id: string, props?: QuickstartJaegerStackProps) {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+
+    // Parameters
+    const uploadBucketName = new CfnParameter(this, "StorageBackend", {
+      type: "String",
+      default: "InMemory",
+      allowedValues: [ "InMemory", "Elasticsearch" ], 
+      description: "Jaeger storage backend."}
+    );
+
+    //const storageBackendType = uploadBucketName.valueAsString as keyof typeof JaegerBackend
+
 
     const vpc = new ec2.Vpc(this, "jaeger-vpc", {
       maxAzs: 2 
     });
 
-    // const jaeger = new JaegerInMemoryService(this, 'jaeger', {
-    //   vpc,
-    //   internetFacing: true,
-    //   containerInsights: true
-    // })
-
-    const jaeger = new JaegerElasticsearchService(this, 'jaeger', {
+    const jaeger = new JaegerInMemoryService(this, 'jaeger', {
       vpc,
       internetFacing: true,
-      containerInsights: true,
+      containerInsights: true
     })
+
+    // const jaeger = new JaegerElasticsearchService(this, 'jaeger', {
+    //   vpc,
+    //   internetFacing: true,
+    //   containerInsights: true,
+    // })
 
     const prometheus = new PrometheusExportService(this, 'prometheus-export', {
       cluster: jaeger.cluster,
