@@ -168,6 +168,7 @@ Parameters:
     Type: String
 
 Conditions:
+  EmptyEnvironmentName: !Equals [!Ref EnvironmentName, '']
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
 
 Resources:
@@ -180,7 +181,8 @@ Resources:
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
-        EnvironmentName: !Ref EnvironmentName
+        EnvironmentName: !If [EmptyEnvironmentName, !Ref 'AWS::StackName', !Ref EnvironmentName]
+        # VPC parameters
         VPCID: !Ref VPCID
         VPCCIDR: !Ref VPCCIDR
         PublicSubnet1ID: !Ref PublicSubnet1ID
@@ -189,7 +191,11 @@ Resources:
         PrivateSubnet1ID: !Ref PrivateSubnet1ID
         PrivateSubnet2ID: !Ref PrivateSubnet2ID
         PrivateSubnet3ID: !Ref PrivateSubnet3ID
+        # Jaeger parameters
         JaegerVersion: !Ref JaegerVersion
+        StorageBackend: !Ref StorageBackend
+        InternalLoadBalancer: !Ref InternalLoadBalancer
+        ConfigureContainerInsights: !Ref ConfigureContainerInsights
         # Quickstart location parameters
         QSS3BucketName: !Ref QSS3BucketName
         QSS3BucketRegion: !Ref QSS3BucketRegion

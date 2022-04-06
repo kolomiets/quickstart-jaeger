@@ -109,6 +109,7 @@ Resources:
         PrivateSubnet3ID: !Ref PrivateSubnet3ID
         ClusterArn: !GetAtt Cluster.Arn
         LoadBalancerArn: !Ref LoadBalancer
+        LoadBalancerDomainName: !GetAtt LoadBalancer.DNSName
         JaegerVersion: !Ref JaegerVersion
 
   ElasticsearchStack:
@@ -127,4 +128,28 @@ Resources:
         PrivateSubnet3ID: !Ref PrivateSubnet3ID
         ClusterArn: !GetAtt Cluster.Arn
         LoadBalancerArn: !Ref LoadBalancer
+        LoadBalancerDomainName: !GetAtt LoadBalancer.DNSName
         JaegerVersion: !Ref JaegerVersion
+
+  MetricsStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/workload/jaeger-metrics-template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        VPCID: !Ref VPCID
+        PrivateSubnet1ID: !Ref PrivateSubnet1ID
+        PrivateSubnet2ID: !Ref PrivateSubnet2ID
+        PrivateSubnet3ID: !Ref PrivateSubnet3ID
+        ClusterArn: !GetAtt Cluster.Arn
+        ScrapeTargets:
+          !If 
+            - InMemoryStorage
+            - !GetAtt InMemoryStack.Outputs.ScrapeTargets
+            - !If 
+                - ElasticseachStorage
+                - !GetAtt ElasticsearchStack.Outputs.ScrapeTargets
+                - !Ref "AWS::NoValue"

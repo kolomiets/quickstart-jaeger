@@ -252,6 +252,9 @@ Resources:
         PrivateSubnet3ID: !If [Using3AvailabilityZones, !GetAtt VPCStack.Outputs.PrivateSubnet3AID, !Ref 'AWS::NoValue']
         # Jaeger parameters
         JaegerVersion: !Ref JaegerVersion
+        StorageBackend: !Ref StorageBackend
+        InternalLoadBalancer: !Ref InternalLoadBalancer
+        ConfigureContainerInsights: !Ref ConfigureContainerInsights
         # Quickstart location parameters
         QSS3BucketName: !Ref QSS3BucketName
         QSS3BucketRegion: !Ref QSS3BucketRegion

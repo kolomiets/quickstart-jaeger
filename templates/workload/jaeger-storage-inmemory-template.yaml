@@ -17,6 +17,8 @@ Parameters:
     Default: ''
   ClusterArn:
     Type: String
+  LoadBalancerDomainName:
+    Type: String
   LoadBalancerArn:
     Type: String
   JaegerVersion:
@@ -27,8 +29,8 @@ Conditions:
 
 Resources:
 
-  # Target Groups
-  targetGroup14250:
+# Target Groups
+  TargetGroup14250:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       Name: jaeger-14250
@@ -37,7 +39,7 @@ Resources:
       TargetType: ip
       VpcId: !Ref VPCID
 
-  targetGroup14268:
+  TargetGroup14268:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       Name: jaeger-14268
@@ -46,7 +48,7 @@ Resources:
       TargetType: ip
       VpcId: !Ref VPCID
 
-  targetGroup14269:
+  TargetGroup14269:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       Name: jaeger-14269
@@ -55,7 +57,7 @@ Resources:
       TargetType: ip
       VpcId: !Ref VPCID
 
-  targetGroup16686:
+  TargetGroup16686:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       Name: jaeger-16686
@@ -64,53 +66,53 @@ Resources:
       TargetType: ip
       VpcId: !Ref VPCID
 
-  # Listeners
-  listener14250:
+# Listeners
+  Listener14250:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
         - TargetGroupArn:
-            Ref: targetGroup14250
+            Ref: TargetGroup14250
           Type: forward
       LoadBalancerArn: !Ref LoadBalancerArn
       Port: 14250
       Protocol: TCP
 
-  listener14268:
+  Listener14268:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
         - TargetGroupArn:
-            Ref: targetGroup14268
+            Ref: TargetGroup14268
           Type: forward
       LoadBalancerArn: !Ref LoadBalancerArn
       Port: 14268
       Protocol: TCP
 
-  listener14269:
+  Listener14269:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
         - TargetGroupArn:
-            Ref: targetGroup14269
+            Ref: TargetGroup14269
           Type: forward
       LoadBalancerArn: !Ref LoadBalancerArn
       Port: 14269
       Protocol: TCP
   
-  listener16686:
+  Listener16686:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
         - TargetGroupArn:
-            Ref: targetGroup16686
+            Ref: TargetGroup16686
           Type: forward
       LoadBalancerArn: !Ref LoadBalancerArn
       Port: 16686
       Protocol: TCP
 
-  # Task Definition
-  taskRole:
+# Roles
+  TaskRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -121,7 +123,34 @@ Resources:
               Service: ecs-tasks.amazonaws.com
         Version: "2012-10-17"
 
-  taskDefinition:
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: "2012-10-17"
+      Policies:
+        - PolicyName: jaeger-all-in-one-execution-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+          - Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Effect: Allow
+            Resource: !GetAtt LogGroup.Arn
+
+# Task Definition
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+
+  TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -132,7 +161,7 @@ Resources:
             LogDriver: awslogs
             Options:
               awslogs-group:
-                Ref: logGroup
+                Ref: LogGroup
               awslogs-stream-prefix: jaeger-all-in-one
               awslogs-region:
                 Ref: AWS::Region
@@ -153,46 +182,16 @@ Resources:
             - Name: SPAN_STORAGE_TYPE
               Value: memory
       Cpu: "1024"
-      ExecutionRoleArn: !GetAtt executionRole.Arn
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
       Family: jaeger-all-in-one-task-definition
       Memory: "2048"
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      TaskRoleArn: !GetAtt taskRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
 
-  logGroup:
-    Type: AWS::Logs::LogGroup
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain
-
-  executionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action: sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service: ecs-tasks.amazonaws.com
-        Version: "2012-10-17"
-
-  executionRolePolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Action:
-              - logs:CreateLogStream
-              - logs:PutLogEvents
-            Effect: Allow
-            Resource: !GetAtt logGroup.Arn
-        Version: "2012-10-17"
-      PolicyName: executionRolePolicy
-      Roles:
-        - Ref: executionRole
-
-  service:
+# Service
+  Service:
     Type: AWS::ECS::Service
     Properties:
       ServiceName: jaeger-all-in-one
@@ -204,37 +203,36 @@ Resources:
         - ContainerName: jaeger-all-in-one
           ContainerPort: 16686
           TargetGroupArn:
-            Ref: targetGroup16686
+            Ref: TargetGroup16686
         - ContainerName: jaeger-all-in-one
           ContainerPort: 14250
           TargetGroupArn:
-            Ref: targetGroup14250
+            Ref: TargetGroup14250
         - ContainerName: jaeger-all-in-one
           ContainerPort: 14268
           TargetGroupArn:
-            Ref: targetGroup14268
+            Ref: TargetGroup14268
         - ContainerName: jaeger-all-in-one
           ContainerPort: 14269
           TargetGroupArn:
-            Ref: targetGroup14269
+            Ref: TargetGroup14269
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
           SecurityGroups:
-            - !GetAtt serviceSecurityGroup.GroupId
+            - !GetAtt ServiceSecurityGroup.GroupId
           Subnets:
             - !Ref PrivateSubnet1ID
             - !Ref PrivateSubnet2ID
             - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
-      TaskDefinition:
-        Ref: taskDefinition
+      TaskDefinition: !Ref TaskDefinition
     DependsOn:
-      - listener14250
-      - listener14268
-      - listener14269
-      - listener16686
+      - Listener14250
+      - Listener14268
+      - Listener14269
+      - Listener16686
 
-  serviceSecurityGroup:
+  ServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: quickstart-jaeger/jaeger/jaeger-all-in-one-service/SecurityGroup
@@ -249,3 +247,7 @@ Resources:
           IpProtocol: tcp
           ToPort: 65535
       VpcId: !Ref VPCID
+
+Outputs:
+  ScrapeTargets:
+    Value: !Sub "${LoadBalancerDomainName}:14269"

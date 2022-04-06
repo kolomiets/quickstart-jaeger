@@ -1,4 +1,3 @@
-
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Deploys Jaeger integration with Amazon Managed Service for Prometheus (TODO)
 
@@ -6,9 +5,215 @@ Parameters:
 # Basic Configuration
   EnvironmentName:
     Type: String
+# VPC parameters
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+  PrivateSubnet1ID:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet2ID:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet3ID:
+    Type: String
+    Default: ''
+# Jaeger parameters
+  ClusterArn:
+    Type: String
+# Scrape parameters
+  ScrapeTargets:
+    Type: List<String>
+  ScrapeIntervalSeconds:  
+    Type: Number
+    Default: 15
+  ScrapeTimeoutSeconds:
+    Type: Number
+    Default: 10
+  ClusterMetricsCollectionInterval: 
+    Type: Number
+    Default: 20
+
+Conditions:
+  Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
 
 Resources:
   APSWorkspace:
     Type: AWS::APS::Workspace
     Properties:
       Alias: !Sub jaeger-${EnvironmentName}-workspace
+
+  ConfigurationParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Jaeger metrics export configuration
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/metrics-export-config"
+      Type: String
+      Value: !Sub
+        - |
+          receivers:
+            prometheus:
+              config:
+                global:
+                  scrape_interval: ${ScrapeIntervalSeconds}s
+                  scrape_timeout: ${ScrapeTimeoutSeconds}s
+                scrape_configs:
+                - job_name: "jaeger"
+                  static_configs:
+                  - targets: ${ScrapeTargets}
+            awsecscontainermetrics:
+              collection_interval: ${ClusterMetricsCollectionInterval}s
+          processors:
+            filter:
+              metrics:
+                include:
+                  match_type: strict
+                  metric_names:
+                    - ecs.task.memory.utilized
+                    - ecs.task.memory.reserved
+                    - ecs.task.cpu.utilized
+                    - ecs.task.cpu.reserved
+                    - ecs.task.network.rate.rx
+                    - ecs.task.network.rate.tx
+                    - ecs.task.storage.read_bytes
+                    - ecs.task.storage.write_bytes
+          exporters:
+            awsprometheusremotewrite:
+              endpoint: ${PrometheusWriteEndpoint}
+              aws_auth:
+                region: ${AWS::Region}
+                service: "aps"
+            logging:
+              loglevel: debug
+          extensions:
+            health_check:
+            pprof:
+              endpoint: :1888
+            zpages:
+              endpoint: :55679
+          service:
+            extensions: [pprof, zpages, health_check]
+            pipelines:
+              metrics:
+                receivers: [prometheus]
+                exporters: [logging, awsprometheusremotewrite]
+              metrics/ecs:
+                receivers: [awsecscontainermetrics]
+                processors: [filter]
+                exporters: [logging, awsprometheusremotewrite]
+        - PrometheusWriteEndpoint: !Sub  ${APSWorkspace.PrometheusEndpoint}api/v1/remote_write
+          ScrapeTargets:
+            Fn::Sub:
+              - "[ '${Targets}' ] "
+              - Targets: !Join ["','", !Ref ScrapeTargets]
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+      Policies:
+        - PolicyName: metrics-export-task-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action: aps:RemoteWrite
+                Effect: Allow
+                Resource: !Ref APSWorkspace
+              - Action:
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogStreams
+                  - logs:DescribeLogGroups
+                Effect: Allow
+                Resource: "*"
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub quickstart-jaeger-${EnvironmentName}-metrics-export
+      ContainerDefinitions:
+        - Name: prometheus-export
+          Essential: true
+          Image: public.ecr.aws/aws-observability/aws-otel-collector:latest
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: ecs
+              awslogs-region: !Ref AWS::Region
+          Secrets:
+            - Name: AOT_CONFIG_CONTENT
+              ValueFrom: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ConfigurationParameter}"
+      Cpu: "256"
+      Memory: "512"
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+      Policies:
+        - PolicyName: metrics-export-execution-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: !GetAtt LogGroup.Arn
+              - Action:
+                  - ssm:DescribeParameters
+                  - ssm:GetParameters
+                  - ssm:GetParameter
+                  - ssm:GetParameterHistory
+                Effect: Allow
+                Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ConfigurationParameter}"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ClusterArn
+      ServiceName: metrics-export
+      TaskDefinition:
+        Ref: TaskDefinition
+      DesiredCount: 1 
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:  
+            - !GetAtt SecurityGroup.GroupId
+          Subnets:
+            - !Ref PrivateSubnet1ID
+            - !Ref PrivateSubnet2ID
+            - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub quickstart-jaeger/${EnvironmentName}/metrices-export/service
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      VpcId: !Ref VPCID
