@@ -260,7 +260,6 @@ Parameters:
     Default: jaeger
   PublicDNS:
     Type: String
-    Description: TODO
     AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
     Default: 'Disabled'
     Description: |
