@@ -44,6 +44,31 @@ Metadata:
           - PublicSubnet2ID
           - PublicSubnet3ID
       - Label:
+          default: Jaeger configuration
+        Parameters:
+          - JaegerVersion
+          - StorageBackend
+          - InternalLoadBalancer
+      - Label:
+          default: Metrics configuration
+        Parameters:
+          - EnableContainerInsights
+          - ExportMetrics
+          - ScrapeIntervalSeconds
+          - ScrapeTimeoutSeconds
+          - ClusterMetricsCollectionInterval
+      - Label:
+          default: DNS configuration
+        Parameters:
+          - DomainName
+          - SubdomainName
+          - PublicDNS
+          - PublicHostedZoneId
+          - PrivateDNS
+          - PrivateHostedZoneId
+          - Certificate
+          - CertificateArn
+      - Label:
           default: AWS Quick Start configuration
         Parameters:
           - QSS3BucketName
@@ -70,6 +95,41 @@ Metadata:
         default: Private subnet 2 ID
       PrivateSubnet3ID:
         default: Private subnet 3 ID
+    # Jaeger configuration
+      JaegerVersion:
+        default: Jaeger version
+      StorageBackend:
+        default: Jaeger storage backend
+      InternalLoadBalancer:
+        default: Use internal load balancer
+    # Metrics configuration
+      EnableContainerInsights:
+        default: Enable Amazon CloudWatch Container Inrights
+      ExportMetrics:
+        default: Export Jaeger metrics
+      ScrapeIntervalSeconds:
+        default: Metrics scrape interval
+      ScrapeTimeoutSeconds:
+        default: Metrics scrape timeout
+      ClusterMetricsCollectionInterval:
+        default: Collection interval for ECS cluster metrics 
+    # DNS configuration
+      DomainName:
+        default: Domain name
+      SubdomainName:
+        default: Subdomain name
+      PublicDNS:
+        default: Public DNS
+      PublicHostedZoneId:
+        default: Public Hosted Zone Id
+      PrivateDNS:
+        default: Private DNS
+      PrivateHostedZoneId:
+        default: Private Hosted Zone Id
+      Certificate:
+        default: Certificate
+      CertificateArn:
+        default: Certificate Arn
     # AWS Quick Start configuration
       QSS3BucketName:
         default: Quick Start S3 bucket name
@@ -133,30 +193,33 @@ Parameters:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
     Default: 'No'
-    Description: Choose "Yes" to deploy Jaeger load balancer in private subnets.
-  ConfigureContainerInsights:
+    Description: Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
+
+# Metrics Scrape parameters
+  EnableContainerInsights:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
     Default: 'Yes'
     Description: |
       Choose "No" to disable integration with CloudWatch Container Insights. 
-      Container Insights ensure sperformance metrics are collected to CloudWatch.
-
-# Metrics Scrape parameters
+      Container Insights ensure performance metrics are available in CloudWatch.
   ExportMetrics:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
     Default: 'No'
-    Description: Choose "Yes" to export Jaeger and ECS metrics to Amazon Managed Service for Prometheus workspace.
+    Description: Choose "Yes" to export Jaeger and ECS cluster metrics to Amazon Managed Service for Prometheus.
   ScrapeIntervalSeconds:  
     Type: Number
     Default: 15
+    Description: Metrics scrape interval, in seconds
   ScrapeTimeoutSeconds:
     Type: Number
     Default: 10
+    Description: Metrics scrape timeout, in seconds
   ClusterMetricsCollectionInterval: 
     Type: Number
     Default: 20
+    Description: Collection interval for ECS cluster metrics, in seconds
 
 # DNS parameters
   DomainName:
@@ -165,35 +228,41 @@ Parameters:
     Default: ''
   SubdomainName:
     Type: String
-    Description: The subdomain name for the Jaeger Query service.
+    Description: The subdomain name for the Jaeger Query service. Jaeger will be available at {subdomain}.{domain} URL.
     Default: jaeger
   PublicDNS:
     Type: String
-    Description: TODO
     AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
     Default: 'Disabled'
+    Description: |
+      Choose "UseExisting" to provide public hosted zone Id where Jaeger DNS record should be created. 
+      Choose "CreateNew" to provision a new Route 53 public hosted zone with provided Domain Name and create Jaeger DNS record there.
   PublicHostedZoneId:
     Type: String
-    Description: TODO
+    Description: Provide Route 53 public hosted zone Id if you selected "UseExisting" above.
     Default: ''
   PrivateDNS:
     Type: String
-    Description: Choose "Yes" if you want to create private DNS entry for Jaeger Query service.
     AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
     Default: 'Disabled'
+    Description: |
+      Choose "UseExisting" to provide private hosted zone Id where Jaeger DNS record should be created. 
+      Choose "CreateNew" to provision a new Route 53 private hosted zone with provided Domain Name and create Jaeger DNS record there.
   PrivateHostedZoneId:
     Type: String
-    Description: TODO
     Default: ''
+    Description: Provide Route 53 public hosted zone Id if you selected "UseExisting" above.
   Certificate:
     Type: String
-    Description: TODO
     AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
     Default: 'Disabled'  
+    Description: |
+      Choose "UseExisting" to provide ACM certificate ARN to use to terminate SSL for Jaeger DNS record. 
+      Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation and use it for Jaeger SSL termination.
   CertificateArn:
     Type: String
     Description: TODO
-    Default: ''
+    Default: Provide ACM certificate ARN if you selected "UseExisting" above.
 
 # Quickstart location parameters
   QSS3BucketName:
@@ -248,8 +317,8 @@ Resources:
         JaegerVersion: !Ref JaegerVersion
         StorageBackend: !Ref StorageBackend
         InternalLoadBalancer: !Ref InternalLoadBalancer
-        ConfigureContainerInsights: !Ref ConfigureContainerInsights
         # Metrics Scrape parameters
+        EnableContainerInsights: !Ref EnableContainerInsights
         ExportMetrics: !Ref ExportMetrics
         ScrapeIntervalSeconds: !Ref ScrapeIntervalSeconds
         ScrapeTimeoutSeconds: !Ref ScrapeTimeoutSeconds

@@ -46,11 +46,11 @@ Parameters:
   InternalLoadBalancer:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
-  ConfigureContainerInsights:
-    Type: String
-    AllowedValues: [ 'Yes', 'No' ]
 
 # Metrics Scrape parameters
+  EnableContainerInsights:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
   ExportMetrics:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
@@ -95,7 +95,7 @@ Parameters:
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
-  ConfigureContainerInsights: !Equals [!Ref ConfigureContainerInsights, 'Yes']
+  EnableContainerInsights: !Equals [!Ref EnableContainerInsights, 'Yes']
   InternalLoadBalancer: !Equals [!Ref InternalLoadBalancer, 'Yes']
   ExportMetrics: !Equals [!Ref ExportMetrics, 'Yes']
 
@@ -110,7 +110,7 @@ Resources:
       ClusterName: jaeger-cluster
       ClusterSettings:
         - Name: containerInsights
-          Value: !If [ConfigureContainerInsights, enabled, disabled]
+          Value: !If [EnableContainerInsights, enabled, disabled]
 
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer

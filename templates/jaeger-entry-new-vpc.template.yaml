@@ -50,10 +50,10 @@ Metadata:
           - JaegerVersion
           - StorageBackend
           - InternalLoadBalancer
-          - ConfigureContainerInsights
       - Label:
           default: Metrics configuration
         Parameters:
+          - EnableContainerInsights
           - ExportMetrics
           - ScrapeIntervalSeconds
           - ScrapeTimeoutSeconds
@@ -106,6 +106,8 @@ Metadata:
       InternalLoadBalancer:
         default: Use internal load balancer
     # Metrics configuration
+      EnableContainerInsights:
+        default: Enable Amazon CloudWatch Container Inrights
       ExportMetrics:
         default: Export Jaeger metrics
       ScrapeIntervalSeconds:
@@ -222,15 +224,15 @@ Parameters:
     AllowedValues: [ 'Yes', 'No' ]
     Default: 'No'
     Description: Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
-  ConfigureContainerInsights:
+
+# Metrics Scrape parameters
+  EnableContainerInsights:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
     Default: 'Yes'
     Description: |
       Choose "No" to disable integration with CloudWatch Container Insights. 
       Container Insights ensure performance metrics are available in CloudWatch.
-
-# Metrics Scrape parameters
   ExportMetrics:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
@@ -374,8 +376,8 @@ Resources:
         JaegerVersion: !Ref JaegerVersion
         StorageBackend: !Ref StorageBackend
         InternalLoadBalancer: !Ref InternalLoadBalancer
-        ConfigureContainerInsights: !Ref ConfigureContainerInsights
         # Metrics Scrape parameters
+        EnableContainerInsights: !Ref EnableContainerInsights
         ExportMetrics: !Ref ExportMetrics
         ScrapeIntervalSeconds: !Ref ScrapeIntervalSeconds
         ScrapeTimeoutSeconds: !Ref ScrapeTimeoutSeconds
