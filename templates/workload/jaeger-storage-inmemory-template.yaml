@@ -276,25 +276,28 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: quickstart-jaeger/jaeger/jaeger-all-in-one-service/SecurityGroup
+      VpcId: !Ref VPCID
       SecurityGroupEgress:
         - CidrIp: 0.0.0.0/0
           Description: Allow all outbound traffic by default
           IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
       SecurityGroupIngress:
         - CidrIp: !Ref VPCCIDR
           Description: Allow ECS Service access (port 16686) from within VPC
-          FromPort: 16686
           IpProtocol: tcp
+          FromPort: 16686
           ToPort: 16686
         - CidrIp: !Ref VPCCIDR
           Description: Allow ECS Service access (port 14250) from within VPC
-          FromPort: 14250
           IpProtocol: tcp
+          FromPort: 14250
           ToPort: 14250
         - CidrIp: !Ref VPCCIDR
           Description: Allow ECS Service access (port 14268) from within VPC
-          FromPort: 14268
           IpProtocol: tcp
+          FromPort: 14268
           ToPort: 14268
         - !If 
           - ExportMetrics
@@ -304,7 +307,6 @@ Resources:
             FromPort: 14269
             ToPort: 14269
           - !Ref "AWS::NoValue"
-      VpcId: !Ref VPCID
 
 Outputs:
   ScrapeTargets:

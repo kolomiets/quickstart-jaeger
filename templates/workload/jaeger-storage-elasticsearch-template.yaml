@@ -151,17 +151,19 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for domain domain
+      VpcId: !Ref VPCID
       SecurityGroupEgress:
         - CidrIp: 0.0.0.0/0
           Description: Allow all outbound traffic by default
           IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
       SecurityGroupIngress:
         - CidrIp: !Ref VPCCIDR
           Description: Allow ES domain access from within VPC
           IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-      VpcId: !Ref VPCID
 
   SearchDomainMasterUserSecret:
     Type: AWS::SecretsManager::Secret
@@ -362,6 +364,8 @@ Resources:
         - CidrIp: 0.0.0.0/0
           Description: Allow all outbound traffic by default
           IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
       SecurityGroupIngress:
         - CidrIp: !Ref VPCCIDR
           Description: Allow ECS Service access (port 14250) from within VPC
@@ -506,6 +510,8 @@ Resources:
         - CidrIp: 0.0.0.0/0
           Description: Allow all outbound traffic by default
           IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
       SecurityGroupIngress:
         - CidrIp: !Ref VPCCIDR
           Description: Allow ECS Service access (16686) from within VPC

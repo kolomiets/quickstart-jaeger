@@ -209,8 +209,10 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: !Sub quickstart-jaeger/${EnvironmentName}/metrices-export/service
+      VpcId: !Ref VPCID      
       SecurityGroupEgress:
         - CidrIp: 0.0.0.0/0
           Description: Allow all outbound traffic by default
           IpProtocol: tcp
-      VpcId: !Ref VPCID
+          FromPort: 0
+          ToPort: 65535
