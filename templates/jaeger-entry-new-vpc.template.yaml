@@ -45,6 +45,31 @@ Metadata:
           - PublicSubnet2CIDR
           - PublicSubnet3CIDR
       - Label:
+          default: Jaeger configuration
+        Parameters:
+          - JaegerVersion
+          - StorageBackend
+          - InternalLoadBalancer
+          - ConfigureContainerInsights
+      - Label:
+          default: Metrics configuration
+        Parameters:
+          - ExportMetrics
+          - ScrapeIntervalSeconds
+          - ScrapeTimeoutSeconds
+          - ClusterMetricsCollectionInterval
+      - Label:
+          default: DNS configuration
+        Parameters:
+          - DomainName
+          - SubdomainName
+          - PublicDNS
+          - PublicHostedZoneId
+          - PrivateDNS
+          - PrivateHostedZoneId
+          - Certificate
+          - CertificateArn
+      - Label:
           default: AWS Quick Start configuration
         Parameters:
           - QSS3BucketName
@@ -73,6 +98,39 @@ Metadata:
         default: Public subnet 2 CIDR
       PublicSubnet3CIDR:
         default: Public subnet 3 CIDR
+    # Jaeger configuration
+      JaegerVersion:
+        default: Jaeger version
+      StorageBackend:
+        default: Jaeger storage backend
+      InternalLoadBalancer:
+        default: Use internal load balancer
+    # Metrics configuration
+      ExportMetrics:
+        default: Export Jaeger metrics
+      ScrapeIntervalSeconds:
+        default: Metrics scrape interval
+      ScrapeTimeoutSeconds:
+        default: Metrics scrape timeout
+      ClusterMetricsCollectionInterval:
+        default: Collection interval for ECS cluster metrics 
+    # DNS configuration
+      DomainName:
+        default: Domain name
+      SubdomainName:
+        default: Subdomain name
+      PublicDNS:
+        default: Public DNS
+      PublicHostedZoneId:
+        default: Public Hosted Zone Id
+      PrivateDNS:
+        default: Private DNS
+      PrivateHostedZoneId:
+        default: Private Hosted Zone Id
+      Certificate:
+        default: Certificate
+      CertificateArn:
+        default: Certificate Arn
     # AWS Quick Start configuration
       QSS3BucketName:
         default: Quick Start S3 bucket name
@@ -90,9 +148,6 @@ Parameters:
       Name of the Jaeger environment (leave empty to use dynamically generated name). 
       Environment name is used to generate unique resource names.
       Multiple Jaeger environments with different names can be deployed in the same region.
-  AvailabilityZones:
-    Description: List of Availability Zones to use for the subnets in the VPC. Pick only as many as match what was selected for Number of Availability Zones (NumberofAZs).
-    Type: List<AWS::EC2::AvailabilityZone::Name>
 
 # VPC parameters
   NumberOfAZs:
@@ -103,6 +158,9 @@ Parameters:
     Description: Number of Availability Zones to use in the VPC. This must match your
       selections in the list of Availability Zones parameter.
     Type: String
+  AvailabilityZones:
+    Description: List of Availability Zones to use for the subnets in the VPC. Pick only as many as match what was selected for Number of Availability Zones (NumberofAZs).
+    Type: List<AWS::EC2::AvailabilityZone::Name>
   VPCCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
@@ -163,30 +221,33 @@ Parameters:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
     Default: 'No'
-    Description: Choose "Yes" to deploy Jaeger load balancer in private subnets.
+    Description: Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
   ConfigureContainerInsights:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
     Default: 'Yes'
     Description: |
       Choose "No" to disable integration with CloudWatch Container Insights. 
-      Container Insights ensure sperformance metrics are collected to CloudWatch.
+      Container Insights ensure performance metrics are available in CloudWatch.
 
 # Metrics Scrape parameters
   ExportMetrics:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
     Default: 'No'
-    Description: Choose "Yes" to export Jaeger and ECS metrics to Amazon Managed Service for Prometheus workspace.
+    Description: Choose "Yes" to export Jaeger and ECS cluster metrics to Amazon Managed Service for Prometheus.
   ScrapeIntervalSeconds:  
     Type: Number
     Default: 15
+    Description: Metrics scrape interval, in seconds
   ScrapeTimeoutSeconds:
     Type: Number
     Default: 10
+    Description: Metrics scrape timeout, in seconds
   ClusterMetricsCollectionInterval: 
     Type: Number
     Default: 20
+    Description: Collection interval for ECS cluster metrics, in seconds
 
 # DNS parameters
   DomainName:
@@ -195,35 +256,42 @@ Parameters:
     Default: ''
   SubdomainName:
     Type: String
-    Description: The subdomain name for the Jaeger Query service.
+    Description: The subdomain name for the Jaeger Query service. Jaeger will be available at {subdomain}.{domain} URL.
     Default: jaeger
   PublicDNS:
     Type: String
     Description: TODO
     AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
     Default: 'Disabled'
+    Description: |
+      Choose "UseExisting" to provide public hosted zone Id where Jaeger DNS record should be created. 
+      Choose "CreateNew" to provision a new Route 53 public hosted zone with provided Domain Name and create Jaeger DNS record there.
   PublicHostedZoneId:
     Type: String
-    Description: TODO
+    Description: Provide Route 53 public hosted zone Id if you selected "UseExisting" above.
     Default: ''
   PrivateDNS:
     Type: String
-    Description: Choose "Yes" if you want to create private DNS entry for Jaeger Query service.
     AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
     Default: 'Disabled'
+    Description: |
+      Choose "UseExisting" to provide private hosted zone Id where Jaeger DNS record should be created. 
+      Choose "CreateNew" to provision a new Route 53 private hosted zone with provided Domain Name and create Jaeger DNS record there.
   PrivateHostedZoneId:
     Type: String
-    Description: TODO
     Default: ''
+    Description: Provide Route 53 public hosted zone Id if you selected "UseExisting" above.
   Certificate:
     Type: String
-    Description: TODO
     AllowedValues: [ 'Disabled', 'UseExisting', 'CreateNew' ]
     Default: 'Disabled'  
+    Description: |
+      Choose "UseExisting" to provide ACM certificate ARN to use to terminate SSL for Jaeger DNS record. 
+      Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation and use it for Jaeger SSL termination.
   CertificateArn:
     Type: String
     Description: TODO
-    Default: ''
+    Default: Provide ACM certificate ARN if you selected "UseExisting" above.
 
 # Quickstart location parameters
   QSS3BucketName:

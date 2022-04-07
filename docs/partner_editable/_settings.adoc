@@ -30,3 +30,5 @@
 :template_link_new_vpc: https://github.com/kolomiets/quickstart-jaeger/blob/main/templates/jaeger-entry-new-vpc.template.yaml
 :launch_link_existing_vpc: https://todo.com
 :template_link_existing_vpc: https://github.com/kolomiets/quickstart-jaeger/blob/main/templates/jaeger-entry-existing-vpc.template.yaml
+
+WARNING: Developer Preview Only
