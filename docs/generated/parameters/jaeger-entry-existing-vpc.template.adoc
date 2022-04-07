@@ -58,7 +58,7 @@ Choose "CreateNew" to provision a new Route 53 private hosted zone with provided
 (`Certificate`)|`Disabled`|Choose "UseExisting" to provide ACM certificate ARN to use to terminate SSL for Jaeger DNS record. 
 Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation and use it for Jaeger SSL termination.
 |Certificate Arn
-(`CertificateArn`)|`Provide ACM certificate ARN if you selected "UseExisting" above.`|TODO
+(`CertificateArn`)|`**__Blank string__**`|Provide ACM certificate ARN if you selected "UseExisting" above.
 |===
 .AWS Quick Start configuration
 [width="100%",cols="16%,11%,73%",options="header",]
