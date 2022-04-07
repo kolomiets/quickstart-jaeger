@@ -21,6 +21,45 @@ Multiple Jaeger environments with different names can be deployed in the same re
 (`PublicSubnet2ID`)|`**__Requires input__**`|ID of the public subnet in Availability Zone 2 of your existing VPC (e.g., subnet-b1236eea).|Public subnet 3 ID
 (`PublicSubnet3ID`)|`**__Blank string__**`|ID of the public subnet in Availability Zone 3 of your existing VPC (e.g., subnet-c3456aba).
 |===
+.Jaeger configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Jaeger version
+(`JaegerVersion`)|`1.32`|Version of the Jaeger release.|Jaeger storage backend
+(`StorageBackend`)|`InMemory`|Jaeger storage backend.|Use internal load balancer
+(`InternalLoadBalancer`)|`No`|Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
+|===
+.Metrics configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Enable Amazon CloudWatch Container Inrights
+(`EnableContainerInsights`)|`Yes`|Choose "No" to disable integration with CloudWatch Container Insights. 
+Container Insights ensure performance metrics are available in CloudWatch.
+|Export Jaeger metrics
+(`ExportMetrics`)|`No`|Choose "Yes" to export Jaeger and ECS cluster metrics to Amazon Managed Service for Prometheus.|Metrics scrape interval
+(`ScrapeIntervalSeconds`)|`15`|Metrics scrape interval, in seconds|Metrics scrape timeout
+(`ScrapeTimeoutSeconds`)|`10`|Metrics scrape timeout, in seconds|Collection interval for ECS cluster metrics
+(`ClusterMetricsCollectionInterval`)|`20`|Collection interval for ECS cluster metrics, in seconds
+|===
+.DNS configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Domain name
+(`DomainName`)|`**__Blank string__**`|The domain name for the Jaeger Query service.|Subdomain name
+(`SubdomainName`)|`jaeger`|The subdomain name for the Jaeger Query service. Jaeger will be available at {subdomain}.{domain} URL.|Public DNS
+(`PublicDNS`)|`Disabled`|Choose "UseExisting" to provide public hosted zone Id where Jaeger DNS record should be created. 
+Choose "CreateNew" to provision a new Route 53 public hosted zone with provided Domain Name and create Jaeger DNS record there.
+|Public Hosted Zone Id
+(`PublicHostedZoneId`)|`**__Blank string__**`|Provide Route 53 public hosted zone Id if you selected "UseExisting" above.|Private DNS
+(`PrivateDNS`)|`Disabled`|Choose "UseExisting" to provide private hosted zone Id where Jaeger DNS record should be created. 
+Choose "CreateNew" to provision a new Route 53 private hosted zone with provided Domain Name and create Jaeger DNS record there.
+|Private Hosted Zone Id
+(`PrivateHostedZoneId`)|`**__Blank string__**`|Provide Route 53 public hosted zone Id if you selected "UseExisting" above.|Certificate
+(`Certificate`)|`Disabled`|Choose "UseExisting" to provide ACM certificate ARN to use to terminate SSL for Jaeger DNS record. 
+Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation and use it for Jaeger SSL termination.
+|Certificate Arn
+(`CertificateArn`)|`Provide ACM certificate ARN if you selected "UseExisting" above.`|TODO
+|===
 .AWS Quick Start configuration
 [width="100%",cols="16%,11%,73%",options="header",]
 |===

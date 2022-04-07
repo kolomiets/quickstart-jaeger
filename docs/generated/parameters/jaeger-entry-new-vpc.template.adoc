@@ -28,15 +28,15 @@ Multiple Jaeger environments with different names can be deployed in the same re
 |Parameter label (name) |Default value|Description|Jaeger version
 (`JaegerVersion`)|`1.32`|Version of the Jaeger release.|Jaeger storage backend
 (`StorageBackend`)|`InMemory`|Jaeger storage backend.|Use internal load balancer
-(`InternalLoadBalancer`)|`No`|Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.|**NO_LABEL**
-(`ConfigureContainerInsights`)|`Yes`|Choose "No" to disable integration with CloudWatch Container Insights. 
-Container Insights ensure performance metrics are available in CloudWatch.
-
+(`InternalLoadBalancer`)|`No`|Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
 |===
 .Metrics configuration
 [width="100%",cols="16%,11%,73%",options="header",]
 |===
-|Parameter label (name) |Default value|Description|Export Jaeger metrics
+|Parameter label (name) |Default value|Description|Enable Amazon CloudWatch Container Inrights
+(`EnableContainerInsights`)|`Yes`|Choose "No" to disable integration with CloudWatch Container Insights. 
+Container Insights ensure performance metrics are available in CloudWatch.
+|Export Jaeger metrics
 (`ExportMetrics`)|`No`|Choose "Yes" to export Jaeger and ECS cluster metrics to Amazon Managed Service for Prometheus.|Metrics scrape interval
 (`ScrapeIntervalSeconds`)|`15`|Metrics scrape interval, in seconds|Metrics scrape timeout
 (`ScrapeTimeoutSeconds`)|`10`|Metrics scrape timeout, in seconds|Collection interval for ECS cluster metrics
