@@ -12,25 +12,22 @@ jobs:
     steps:
     - name: Checkout (main)
       uses: actions/checkout@v2
-      with:
-        submodules: 'recursive'
-    # - name: Get new doc updates
-    #   run: |
-    #     wget https://raw.githubusercontent.com/aws-quickstart/quickstart-documentation-base-common/main/.utils/configure_git_env.sh
-    #     chmod +x configure_git_env.sh
-    #     ./configure_git_env.sh
+    - name: Get new doc updates
+      run: |
+          wget https://raw.githubusercontent.com/aws-quickstart/quickstart-documentation-base-common/main/.utils/configure_git_env.sh
+          chmod +x configure_git_env.sh
+          ./configure_git_env.sh
     - name: Setup python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v2
       with:
         python-version: 3.8
     - name: Generate dynamic content.
       run: ./docs/boilerplate/.utils/generate_dynamic_content.sh
     - name: Run local actions
-      run: ./docs/boilerplate/.utils/build_docs.sh
-      #id: adoc
-      #uses: ./docs/boilerplate/.actions/asciidoctor-action
-      #with:
-      #  program: "./docs/boilerplate/.utils/build_docs.sh"
+      id: adoc
+      uses: ./docs/boilerplate/.actions/asciidoctor-action
+      with:
+        program: "./docs/boilerplate/.utils/build_docs.sh"
     - name: Stage and Push changes to gh-pages branch.
       run: ./docs/boilerplate/.utils/commit_and_push_to_ghpages.sh
       env:
