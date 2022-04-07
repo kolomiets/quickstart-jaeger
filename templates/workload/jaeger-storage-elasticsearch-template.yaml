@@ -527,6 +527,83 @@ Resources:
             ToPort: 16687
           - !Ref "AWS::NoValue"
 
+
+# Dependencies
+
+  DependenciesLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+
+  DependensciesTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: "2012-10-17"
+
+  DependenciesExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+      Policies:
+        - PolicyName: jaeger-dependencies-execution-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: !GetAtt DependenciesLogGroup.Arn
+              - Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Effect: Allow
+                Resource: !Ref SearchDomainMasterUserSecret
+
+  DependenciesTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub quickstart-jaeger-dependencies-${EnvironmentName}
+      ContainerDefinitions:
+        - Name: jaeger-dependencies
+          Image: jaegertracing/spark-dependencies:latest
+          Essential: true
+          Environment:
+            - Name: STORAGE
+              Value: elasticsearch
+            - Name: ES_NODES
+              Value: !Sub "https://${SearchDomain.DomainEndpoint}"
+            - Name: ES_USERNAME
+              Value: master-user
+          Secrets:
+            - Name: ES_PASSWORD
+              ValueFrom: !Sub "${SearchDomainMasterUserSecret}:password::"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref DependenciesLogGroup
+              awslogs-stream-prefix: jaeger-dependencies
+              awslogs-region: !Ref AWS::Region
+      Cpu: "1024"
+      TaskRoleArn: !GetAtt DependensciesTaskRole.Arn
+      ExecutionRoleArn: !GetAtt DependenciesExecutionRole.Arn
+      Memory: "2048"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+
 Outputs:
   ScrapeTargets:
     Value: !Sub "${LoadBalancerDomainName}:14269,${LoadBalancerDomainName}:16687"
