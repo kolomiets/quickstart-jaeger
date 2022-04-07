@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deploys a Jaeger distributed tracing backend  (TODO)
+Description: Deploys a Jaeger distributed tracing backend (TODO)
 
 Parameters:
 # Basic Configuration
@@ -115,7 +115,6 @@ Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: jaeger-lb
       Type: network
       Scheme: !If [InternalLoadBalancer, internal, internet-facing] 
       Subnets:

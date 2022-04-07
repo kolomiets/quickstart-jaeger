@@ -149,6 +149,7 @@ Resources:
       LoadBalancerArn: !Ref LoadBalancerArn
       Port: 443
       Protocol: TLS
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
       Certificates:
         - CertificateArn: !Ref CertificateArn
 
@@ -188,8 +189,8 @@ Resources:
 # Task Definition
   LogGroup:
     Type: AWS::Logs::LogGroup
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain
+    Properties:
+      RetentionInDays: 30
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -278,13 +279,31 @@ Resources:
       SecurityGroupEgress:
         - CidrIp: 0.0.0.0/0
           Description: Allow all outbound traffic by default
-          IpProtocol: "-1"
+          IpProtocol: tcp
       SecurityGroupIngress:
         - CidrIp: !Ref VPCCIDR
-          Description: Allow ECS Service access from within VPC
-          FromPort: 0
+          Description: Allow ECS Service access (port 16686) from within VPC
+          FromPort: 16686
           IpProtocol: tcp
-          ToPort: 65535
+          ToPort: 16686
+        - CidrIp: !Ref VPCCIDR
+          Description: Allow ECS Service access (port 14250) from within VPC
+          FromPort: 14250
+          IpProtocol: tcp
+          ToPort: 14250
+        - CidrIp: !Ref VPCCIDR
+          Description: Allow ECS Service access (port 14268) from within VPC
+          FromPort: 14268
+          IpProtocol: tcp
+          ToPort: 14268
+        - !If 
+          - ExportMetrics
+          - CidrIp: !Ref VPCCIDR
+            Description: Allow ECS Service access (port 14269) from within VPC
+            IpProtocol: tcp
+            FromPort: 14269
+            ToPort: 14269
+          - !Ref "AWS::NoValue"
       VpcId: !Ref VPCID
 
 Outputs:

@@ -183,8 +183,8 @@ Resources:
 
   LogGroup:
     Type: AWS::Logs::LogGroup
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain
+    Properties:
+      RetentionInDays: 30
 
   Service:
     Type: AWS::ECS::Service
@@ -212,5 +212,5 @@ Resources:
       SecurityGroupEgress:
         - CidrIp: 0.0.0.0/0
           Description: Allow all outbound traffic by default
-          IpProtocol: "-1"
+          IpProtocol: tcp
       VpcId: !Ref VPCID

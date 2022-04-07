@@ -261,8 +261,8 @@ Parameters:
       Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation and use it for Jaeger SSL termination.
   CertificateArn:
     Type: String
-    Description: TODO
-    Default: Provide ACM certificate ARN if you selected "UseExisting" above.
+    Default: ''
+    Description: Provide ACM certificate ARN if you selected "UseExisting" above.
 
 # Quickstart location parameters
   QSS3BucketName:
