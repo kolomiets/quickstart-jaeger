@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.17">
-<title>Jaeger on the AWS Cloud</title>
+<title>Overview</title>
 <style>
 
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -864,6 +864,18 @@ p.footer-text a{color:#d7d8d8}
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Developer Preview Only
+</td>
+</tr>
+</table>
+</div>
 <h2 id="_jaeger_on_the_aws_cloud" class="discrete text-center">Jaeger on the AWS Cloud</h2>
 <h2 id="_quick_start_reference_deployment" class="discrete text-left text-center">Quick Start Reference Deployment</h2>
 <div class="imageblock text-center">
@@ -1640,7 +1652,158 @@ Multiple Jaeger environments with different names can be deployed in the same re
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 3. AWS Quick Start configuration</caption>
+<caption class="title">Table 3. Jaeger configuration</caption>
+<colgroup>
+<col style="width: 16%;">
+<col style="width: 11%;">
+<col style="width: 73%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter label (name)</th>
+<th class="tableblock halign-left valign-top">Default value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger version
+(<code>JaegerVersion</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>1.32</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Version of the Jaeger release.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger storage backend
+(<code>StorageBackend</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>InMemory</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger storage backend.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use internal load balancer
+(<code>InternalLoadBalancer</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>No</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>NO_LABEL</strong>
+(<code>ConfigureContainerInsights</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Yes</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Choose "No" to disable integration with CloudWatch Container Insights.
+Container Insights ensure performance metrics are available in CloudWatch.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 4. Metrics configuration</caption>
+<colgroup>
+<col style="width: 16%;">
+<col style="width: 11%;">
+<col style="width: 73%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter label (name)</th>
+<th class="tableblock halign-left valign-top">Default value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Export Jaeger metrics
+(<code>ExportMetrics</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>No</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Choose "Yes" to export Jaeger and ECS cluster metrics to Amazon Managed Service for Prometheus.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Metrics scrape interval
+(<code>ScrapeIntervalSeconds</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>15</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Metrics scrape interval, in seconds</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Metrics scrape timeout
+(<code>ScrapeTimeoutSeconds</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>10</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Metrics scrape timeout, in seconds</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Collection interval for ECS cluster metrics
+(<code>ClusterMetricsCollectionInterval</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>20</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Collection interval for ECS cluster metrics, in seconds</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 5. DNS configuration</caption>
+<colgroup>
+<col style="width: 16%;">
+<col style="width: 11%;">
+<col style="width: 73%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter label (name)</th>
+<th class="tableblock halign-left valign-top">Default value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain name
+(<code>DomainName</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Blank string</em></strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The domain name for the Jaeger Query service.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Subdomain name
+(<code>SubdomainName</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>jaeger</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The subdomain name for the Jaeger Query service. Jaeger will be available at {subdomain}.{domain} URL.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Public DNS
+(<code>PublicDNS</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Disabled</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Choose "UseExisting" to provide public hosted zone Id where Jaeger DNS record should be created.
+Choose "CreateNew" to provision a new Route 53 public hosted zone with provided Domain Name and create Jaeger DNS record there.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Public Hosted Zone Id
+(<code>PublicHostedZoneId</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Blank string</em></strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Provide Route 53 public hosted zone Id if you selected "UseExisting" above.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Private DNS
+(<code>PrivateDNS</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Disabled</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Choose "UseExisting" to provide private hosted zone Id where Jaeger DNS record should be created.
+Choose "CreateNew" to provision a new Route 53 private hosted zone with provided Domain Name and create Jaeger DNS record there.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Private Hosted Zone Id
+(<code>PrivateHostedZoneId</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>Blank string</em></strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Provide Route 53 public hosted zone Id if you selected "UseExisting" above.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Certificate
+(<code>Certificate</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Disabled</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Choose "UseExisting" to provide ACM certificate ARN to use to terminate SSL for Jaeger DNS record.
+Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation and use it for Jaeger SSL termination.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Certificate Arn
+(<code>CertificateArn</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Provide ACM certificate ARN if you selected "UseExisting" above.</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TODO</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 6. AWS Quick Start configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1678,7 +1841,7 @@ Multiple Jaeger environments with different names can be deployed in the same re
 <div class="sect2">
 <h3 id="_launch_into_an_existing_vpc">Launch into an existing VPC</h3>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 4. Basic configuration</caption>
+<caption class="title">Table 7. Basic configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1703,7 +1866,7 @@ Multiple Jaeger environments with different names can be deployed in the same re
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 5. VPC network configuration</caption>
+<caption class="title">Table 8. VPC network configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1768,7 +1931,7 @@ Multiple Jaeger environments with different names can be deployed in the same re
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 6. AWS Quick Start configuration</caption>
+<caption class="title">Table 9. AWS Quick Start configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
