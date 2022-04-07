@@ -345,7 +345,8 @@ Resources:
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
-          SecurityGroups: !GetAtt CollectorServiceSecurityGroup.GroupId
+          SecurityGroups: 
+            - !GetAtt CollectorServiceSecurityGroup.GroupId
           Subnets:
             - !Ref PrivateSubnet1ID
             - !Ref PrivateSubnet2ID
@@ -584,7 +585,8 @@ Resources:
             - Name: STORAGE
               Value: elasticsearch
             - Name: ES_NODES
-              Value: !Sub "https://${SearchDomain.DomainEndpoint}"
+              # port has to be specified explicitly, otherwised default 9200 will be used
+              Value: !Sub "https://${SearchDomain.DomainEndpoint}:443" 
             - Name: ES_USERNAME
               Value: master-user
           Secrets:
