@@ -1,0 +1,32 @@
+
+.Basic configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Environment name
+(`EnvironmentName`)|`**__Blank string__**`|Name of the Jaeger environment (leave empty to use dynamically generated name). 
+Environment name is used to generate unique resource names.
+Multiple Jaeger environments with different names can be deployed in the same region.
+
+|===
+.VPC network configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Number of Availability Zones
+(`NumberOfAZs`)|`2`|Number of Availability Zones to use in the VPC. This must match your selections in the list of Availability Zones parameter.|Availability Zones
+(`AvailabilityZones`)|`**__Requires input__**`|List of Availability Zones to use for the subnets in the VPC. Pick only as many as match what was selected for Number of Availability Zones (NumberofAZs).|VPC CIDR
+(`VPCCIDR`)|`10.0.0.0/16`|CIDR block for the VPC.|Private subnet 1 CIDR
+(`PrivateSubnet1CIDR`)|`10.0.0.0/19`|CIDR block for private subnet 1 located in Availability Zone 1.|Private subnet 2 CIDR
+(`PrivateSubnet2CIDR`)|`10.0.32.0/19`|CIDR block for private subnet 2 located in Availability Zone 2.|Private subnet 3 CIDR
+(`PrivateSubnet3CIDR`)|`10.0.64.0/19`|CIDR block for private subnet 3, located in Availability Zone 3.|Public subnet 1 CIDR
+(`PublicSubnet1CIDR`)|`10.0.128.0/20`|CIDR block for the public (DMZ) subnet 1 located in Availability Zone 1.|Public subnet 2 CIDR
+(`PublicSubnet2CIDR`)|`10.0.144.0/20`|CIDR block for the public (DMZ) subnet 2 located in Availability Zone 2.|Public subnet 3 CIDR
+(`PublicSubnet3CIDR`)|`10.0.160.0/20`|CIDR block for the public (DMZ) subnet 3, located in Availability Zone 3.
+|===
+.AWS Quick Start configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Quick Start S3 bucket name
+(`QSS3BucketName`)|`aws-quickstart`|S3 bucket name for the Quick Start assets. This string can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).|Quick Start S3 key prefix
+(`QSS3KeyPrefix`)|`quickstart-jaeger/`|S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).|Quick Start S3 bucket region
+(`QSS3BucketRegion`)|`us-east-1`|The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.
+|===

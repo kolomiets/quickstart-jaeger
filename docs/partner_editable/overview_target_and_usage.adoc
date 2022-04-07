@@ -1,0 +1,3 @@
+This Quick Start reference deployment guide provides step-by-step instructions for deploying Amazon Elastic Kubernetes Service (Amazon EKS) clusters.
+
+This Quick Start is for users who want a repeatable, customizable reference deployment for Amazon EKS using AWS CloudFormation.

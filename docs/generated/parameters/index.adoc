@@ -1,0 +1,6 @@
+
+=== Launch into a new VPC
+include::jaeger-entry-new-vpc.template.adoc[]
+
+=== Launch into an existing VPC
+include::jaeger-entry-existing-vpc.template.adoc[]
