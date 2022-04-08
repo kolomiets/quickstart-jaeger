@@ -2,4 +2,12 @@
 // Briefly describe the software. Use consistent and clear branding. 
 // Include the benefits of using the software on AWS, and provide details on usage scenarios.
 
-<Describe how the software works on AWS.>
+This Quick Start integrates Jaeger with the following AWS services:
+
+* https://aws.amazon.com/cloudformation/[AWS CloudFormation] - infrastructure as code Jaeger deployment
+* https://aws.amazon.com/ecs/[Amazon ECS] - highly available Fargate cluster
+* https://aws.amazon.com/opensearch-service/[Amazon Opensearch] - highly available search cluster
+* https://aws.amazon.com/cloudwatch/[Amazon CloudWatch] - integration for logs and metrics
+* https://aws.amazon.com/route53/[Amazon Route53] - DNS configuration
+* https://aws.amazon.com/certificate-manager/[AWS Certificate Manager] - integration for TLS certificates
+* https://aws.amazon.com/prometheus/[Amazon Managed Service for Prometheus] - centralized metrics collection
