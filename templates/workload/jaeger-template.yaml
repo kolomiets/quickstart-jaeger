@@ -58,6 +58,10 @@ Parameters:
     Type: Number
   ESVolumeType:
     Type: String
+  ESDependenciesJobSchedule: 
+    Type: String
+  ESDependenciesJobTimeRange: 
+    Type: String
 
 # Metrics Scrape parameters
   EnableContainerInsights:
@@ -212,7 +216,9 @@ Resources:
         ESInstanceType: !Ref ESInstanceType
         ESVolumeSize: !Ref ESVolumeSize
         ESVolumeType: !Ref ESVolumeType
-
+        ESDependenciesJobSchedule: !Ref ESDependenciesJobSchedule 
+        ESDependenciesJobTimeRange: !Ref ESDependenciesJobTimeRange
+    
   MetricsStack:
     Type: AWS::CloudFormation::Stack
     Condition: ExportMetrics

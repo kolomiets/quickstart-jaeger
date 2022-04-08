@@ -43,6 +43,10 @@ Parameters:
     Type: Number
   ESVolumeType:
     Type: String
+  ESDependenciesJobSchedule: 
+    Type: String
+  ESDependenciesJobTimeRange: 
+    Type: String
 
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
@@ -236,20 +240,14 @@ Resources:
           - !Ref PrivateSubnet1ID
           - !Ref PrivateSubnet2ID
           - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
-      AccessPolicies: !Sub |
-        {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "*"
-              },
-              "Action": "es:*",
-              "Resource": "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/jaeger-traces/*"
-            }
-          ]
-        }
+      AccessPolicies: 
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              AWS: '*'
+            Action: 'es:*'
+            Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/jaeger-traces/*"
       AdvancedSecurityOptions:
         Enabled: true
         InternalUserDatabaseEnabled: true
@@ -634,10 +632,12 @@ Resources:
             - Name: STORAGE
               Value: elasticsearch
             - Name: ES_NODES
-              # port has to be specified explicitly, otherwised default 9200 will be used
+              # port has to be specified explicitly, otherwise default 9200 will be used
               Value: !Sub "https://${SearchDomain.DomainEndpoint}:443" 
             - Name: ES_USERNAME
               Value: master-user
+            - Name: ES_TIME_RANGE
+              Value: !Ref ESDependenciesJobTimeRange
           Secrets:
             - Name: ES_PASSWORD
               ValueFrom: !Sub "${SearchDomainMasterUserSecret}:password::"
@@ -661,7 +661,7 @@ Resources:
       GroupDescription: quickstart-jaeger/jaeger/jaeger-dependencies-job/SecurityGroup
       VpcId: !Ref VPCID
       SecurityGroupEgress:
-        - CidrIp: !Ref VPCCIDR
+        - CidrIp: 0.0.0.0/0
           Description: Allow VPC outbound traffic by default
           IpProtocol: tcp
           FromPort: 0
@@ -690,12 +690,20 @@ Resources:
                 Condition:
                   ArnEquals:
                     "ecs:cluster": !Ref ClusterArn
+              - Action:
+                  - iam:PassRole
+                Effect: Allow
+                Resource:  
+                  - "*"
+                Condition:
+                  StringLike:
+                    "iam:PassedToService": ecs-tasks.amazonaws.com
 
   DependenciesJobTrigger:
     Type: AWS::Events::Rule
     Properties:
       Description: Jaeger Dependencies trigger according to the specified schedule
-      ScheduleExpression: cron(10 * * * ? *)
+      ScheduleExpression: !Sub "cron(${ESDependenciesJobSchedule})"
       State: ENABLED
       Targets:
       - Id: jaeger-dependencies-builder-job

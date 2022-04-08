@@ -58,6 +58,8 @@ Metadata:
           - ESInstanceType
           - ESVolumeSize
           - ESVolumeType
+          - ESDependenciesJobSchedule
+          - ESDependenciesJobTimeRange
       - Label:
           default: Metrics configuration
         Parameters:
@@ -124,6 +126,10 @@ Metadata:
         default: Data node volume size
       ESVolumeType:
         default: Data node volume type
+      ESDependenciesJobSchedule: 
+        default: Dependencies job schedule
+      ESDependenciesJobTimeRange: 
+        default: Dependencies job time range
     # Metrics configuration
       EnableContainerInsights:
         default: Enable Amazon CloudWatch Container Inrights
@@ -269,6 +275,16 @@ Parameters:
     Type: String
     Default: gp2
     Description: The EBS volume type to use with the OpenSearch Service domain, such as standard, gp2, or io1.
+  ESDependenciesJobSchedule: 
+    Type: String
+    Default: '0 1 * * *'
+    Description: cron expression that is used to re-build service dependencies (default is daily at 1am).
+  ESDependenciesJobTimeRange: 
+    Type: String
+    Default: '24h'
+    Description: |
+      How far in the past the job should look to for spans, the maximum and default is `24h`.
+      Any value accepted by [date-math](https://www.elastic.co/guide/en/elasticsearch/reference/current/common-options.html#date-math) can be used here, but the anchor is always `now`.
 
 # Metrics Scrape parameters
   EnableContainerInsights:
@@ -427,6 +443,8 @@ Resources:
         ESInstanceType: !Ref ESInstanceType
         ESVolumeSize: !Ref ESVolumeSize
         ESVolumeType: !Ref ESVolumeType
+        ESDependenciesJobSchedule: !Ref ESDependenciesJobSchedule 
+        ESDependenciesJobTimeRange: !Ref ESDependenciesJobTimeRange
         # Metrics Scrape parameters
         EnableContainerInsights: !Ref EnableContainerInsights
         ExportMetrics: !Ref ExportMetrics
