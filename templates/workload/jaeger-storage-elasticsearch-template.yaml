@@ -30,6 +30,8 @@ Parameters:
   ExportMetrics:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
+  CertificateArn:
+    Type: String
 # Elasticsearch parameters
   ESEngineVersion: 
     Type: String
@@ -45,33 +47,72 @@ Parameters:
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
   ExportMetrics: !Equals [!Ref ExportMetrics, 'Yes']
+  CertificateProvided: !Not [!Equals [!Ref CertificateArn, '']]
+  NoCertificateProvided: !Equals [!Ref CertificateArn, '']
 
 Resources:
 
-# Listeners
+# Target Groups
 
-  Listener16686:
-    Type: AWS::ElasticLoadBalancingV2::Listener
+  TargetGroup14250:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      DefaultActions:
-        - TargetGroupArn:
-            Ref: TargetGroup16686
-          Type: forward
-      LoadBalancerArn: !Ref LoadBalancerArn
-      Port: 16686
+      Name: jaeger-14250
+      Port: 14250
       Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
 
-  Listener16687:
-    Type: AWS::ElasticLoadBalancingV2::Listener
+  TargetGroup14268:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: jaeger-14268
+      Port: 14268
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+
+  TargetGroup14269:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Condition: ExportMetrics
     Properties:
-      DefaultActions:
-        - TargetGroupArn:
-            Ref: TargetGroup16687
-          Type: forward
-      LoadBalancerArn: !Ref LoadBalancerArn
+      Name: jaeger-14269
+      Port: 14269
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+
+  TargetGroup16687:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: ExportMetrics
+    Properties:
+      Name: jaeger-16687
       Port: 16687
       Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+
+  TargetGroupHttp:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: NoCertificateProvided
+    Properties:
+      Name: jaeger-http
+      Port: 80
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+
+  TargetGroupHttps:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: CertificateProvided
+    Properties:
+      Name: jaeger-https
+      Port: 443
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+
+# Listeners
 
   Listener14250:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -107,54 +148,44 @@ Resources:
       Port: 14269
       Protocol: TCP
 
-# Target Groups
-
-  TargetGroup16686:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      Name: jaeger-16686
-      Port: 16686
-      Protocol: TCP
-      TargetType: ip
-      VpcId: !Ref VPCID
-
-  TargetGroup16687:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  Listener16687:
+    Type: AWS::ElasticLoadBalancingV2::Listener
     Condition: ExportMetrics
     Properties:
-      Name: jaeger-16687
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroup16687
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
       Port: 16687
       Protocol: TCP
-      TargetType: ip
-      VpcId: !Ref VPCID
 
-  TargetGroup14250:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  HttpListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: NoCertificateProvided
     Properties:
-      Name: jaeger-14250
-      Port: 14250
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroupHttp
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
+      Port: 80
       Protocol: TCP
-      TargetType: ip
-      VpcId: !Ref VPCID
 
-  TargetGroup14268:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  HttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: CertificateProvided
     Properties:
-      Name: jaeger-14268
-      Port: 14268
-      Protocol: TCP
-      TargetType: ip
-      VpcId: !Ref VPCID
-
-  TargetGroup14269:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Condition: ExportMetrics
-    Properties:
-      Name: jaeger-14269
-      Port: 14269
-      Protocol: TCP
-      TargetType: ip
-      VpcId: !Ref VPCID
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroupHttps
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
+      Port: 443
+      Protocol: TLS
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      Certificates:
+        - CertificateArn: !Ref CertificateArn
 
 # Search Domain
 
@@ -376,10 +407,6 @@ Resources:
             - !Ref PrivateSubnet1ID
             - !Ref PrivateSubnet2ID
             - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
-    DependsOn:
-      - Listener14250
-      - Listener14268
-      # - Listener14269
 
   CollectorServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -507,7 +534,7 @@ Resources:
       LoadBalancers:
         - ContainerName: jaeger-query
           ContainerPort: 16686
-          TargetGroupArn: !Ref TargetGroup16686
+          TargetGroupArn: !If [CertificateProvided, !Ref TargetGroupHttps, !Ref TargetGroupHttp]
         - !If 
           - ExportMetrics
           - ContainerName: jaeger-query
@@ -523,9 +550,6 @@ Resources:
             - !Ref PrivateSubnet1ID
             - !Ref PrivateSubnet2ID
             - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
-    DependsOn:
-      - Listener16686
-      # - Listener16687
 
   QueryServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
