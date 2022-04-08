@@ -698,7 +698,7 @@ Resources:
       ScheduleExpression: cron(10 * * * ? *)
       State: ENABLED
       Targets:
-      - Id: !Sub '${ServiceName}-Fargate-Task'
+      - Id: jaeger-dependencies-builder-job
         Arn: !Ref ClusterArn
         RoleArn: !GetAtt DependenciesTaskSchedulerRole.Arn
         EcsParameters:
