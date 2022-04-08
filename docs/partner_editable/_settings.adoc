@@ -5,7 +5,7 @@
 // For the following attribute, if you have no short name, enter the same name as partner-product-name.
 :partner-product-short-name: Jaeger
 // If there's no partner, comment partner-company-name and partner-contributors.
-:partner-company-name: The Linux Foundation
+:partner-company-name: Cloud Native Computing Foundation
 :doc-month: April
 :doc-year: 2022
 // For the following two "contributor" attributes, if the partner agrees to include names in the byline, 

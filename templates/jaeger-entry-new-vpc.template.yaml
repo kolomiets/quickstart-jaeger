@@ -7,7 +7,7 @@ Metadata:
         - E0002
   QuickStartDocumentation:
     EntrypointName: "Launch into a new VPC"
-    Order: Index 1
+    Order: Index a
   LintSpellExclude:
     - Docker
     - Jaeger
