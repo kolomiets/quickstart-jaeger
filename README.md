@@ -21,7 +21,7 @@ This Quick Start integrates Jaeger with the following AWS services:
 * [Amazon Route53](https://aws.amazon.com/route53/) hosted zone for DNS configuration
 * [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) integration for TLS certificates
 
-For architectural details, best practices, step-by-step instructions, and customization options, see the [deployment guide]().
+For architectural details, best practices, step-by-step instructions, and customization options, see the [deployment guide](https://kolomiets.github.io/quickstart-jaeger).
 
 To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo. 
 If you'd like to submit code for this Quick Start, please review the [AWS Quick Start Contributor's Kit](https://aws-quickstart.github.io/).
