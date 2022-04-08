@@ -1,5 +1,7 @@
 # Modular and Scalable Jaeger Architecture on AWS
 
+![Jaeger Logo](docs/images/jaeger-horizontal-color.png)
+
 This Quick Start helps you to deploy a Highly Available Jaeger - open source, end-to-end distributed tracing backend on the Amazon Web Services (AWS) Cloud.
 
 You can use the AWS CloudFormation templates included with the Quick Start to deploy Jaeger
