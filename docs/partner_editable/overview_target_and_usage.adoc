@@ -1,3 +1,6 @@
+
+image::jaeger-horizontal-color.png[Jaeger]
+
 This Quick Start reference deployment guide provides step-by-step instructions for deploying https://www.jaegertracing.io/[Jaeger] on the AWS Cloud.
 
 Jaeger, inspired by https://research.google.com/pubs/pub36356.html[Dapper] and https://zipkin.io/[OpenZipkin], 
@@ -10,4 +13,16 @@ https://cncf.io/[Cloud Native Computing Foundation]. It can be used for monitori
 * Service dependency analysis
 * Performance / latency optimization
 
-This Quick Start is for users who want a repeatable, customizable reference deployment for Jaeger using AWS CloudFormation.
+This Quick Start is for users who want a repeatable, customizable reference deployment 
+for Jaeger using https://aws.amazon.com/cloudformation/[AWS CloudFormation].
+
+This Quick Start helps you to deploy a https://docs.aws.amazon.com/whitepapers/latest/real-time-communication-on-aws/high-availability-and-scalability-on-aws.html[highly available] Jaeger - open source, end-to-end 
+distributed tracing backend on the Amazon Web Services (AWS) Cloud.
+
+You can use the AWS CloudFormation templates included with the Quick Start to deploy Jaeger 
+in your AWS account in about 10-30 minutes. The Quick Start automates the following:
+
+* Deploying Jaeger into a new VPC
+* Deploying Jaeger into an existing VPC
+
+You can also use the AWS CloudFormation templates as a starting point for your own implementation.
