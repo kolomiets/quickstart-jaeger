@@ -1,3 +1,12 @@
-This Quick Start reference deployment guide provides step-by-step instructions for deploying Amazon Elastic Kubernetes Service (Amazon EKS) clusters.
+This Quick Start reference deployment guide provides step-by-step instructions for deploying https://www.jaegertracing.io/[Jaeger] on the AWS Cloud.
 
-This Quick Start is for users who want a repeatable, customizable reference deployment for Amazon EKS using AWS CloudFormation.
+Jaeger, inspired by https://research.google.com/pubs/pub36356.html[Dapper] and https://zipkin.io/[OpenZipkin], 
+is a distributed tracing platform created by https://uber.github.io/[Uber Technologies] and donated to 
+https://cncf.io/[Cloud Native Computing Foundation]. It can be used for monitoring microservices-based distributed systems:
+* Distributed context propagation
+* Distributed transaction monitoring
+* Root cause analysis
+* Service dependency analysis
+* Performance / latency optimization
+
+This Quick Start is for users who want a repeatable, customizable reference deployment for Jaeger using AWS CloudFormation.
