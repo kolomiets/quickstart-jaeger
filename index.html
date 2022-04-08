@@ -1687,7 +1687,56 @@ Multiple Jaeger environments with different names can be deployed in the same re
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 4. Metrics configuration</caption>
+<caption class="title">Table 4. [Only for Elasticsearch backend] Elasticsearch configuration</caption>
+<colgroup>
+<col style="width: 16%;">
+<col style="width: 11%;">
+<col style="width: 73%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter label (name)</th>
+<th class="tableblock halign-left valign-top">Default value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Elasticsearch version
+(<code>ESEngineVersion</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Elasticsearch_7.10</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The version of OpenSearch to use. The value must be in the format OpenSearch_X.Y or Elasticsearch_X.Y.
+For information about supported versions, see <a href="https://docs.aws.amazon.com/opensearch-service/latest/developerguide/what-is.html#choosing-version" class="bare">https://docs.aws.amazon.com/opensearch-service/latest/developerguide/what-is.html#choosing-version</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of data nodes
+(<code>ESInstanceCount</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The number of data nodes (instances) to use in the OpenSearch Service domain.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data node instance type
+(<code>ESInstanceType</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>t3.small.search</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The instance type for your data nodes.
+For valid values, see <a href="https://docs.aws.amazon.com/opensearch-service/latest/developerguide/supported-instance-types.html" class="bare">https://docs.aws.amazon.com/opensearch-service/latest/developerguide/supported-instance-types.html</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data node volume size
+(<code>ESVolumeSize</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>10</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The size (in GiB) of the EBS volume for each data node.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data node volume type
+(<code>ESVolumeType</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gp2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The EBS volume type to use with the OpenSearch Service domain, such as standard, gp2, or io1.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 5. Metrics configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1735,7 +1784,7 @@ Container Insights ensure performance metrics are available in CloudWatch.</p></
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 5. DNS configuration</caption>
+<caption class="title">Table 6. DNS configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1803,7 +1852,7 @@ Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 6. AWS Quick Start configuration</caption>
+<caption class="title">Table 7. AWS Quick Start configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1841,7 +1890,7 @@ Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation
 <div class="sect2">
 <h3 id="_launch_into_an_existing_vpc">Launch into an existing VPC</h3>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 7. Basic configuration</caption>
+<caption class="title">Table 8. Basic configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1866,7 +1915,7 @@ Multiple Jaeger environments with different names can be deployed in the same re
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 8. VPC network configuration</caption>
+<caption class="title">Table 9. VPC network configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1931,7 +1980,7 @@ Multiple Jaeger environments with different names can be deployed in the same re
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 9. Jaeger configuration</caption>
+<caption class="title">Table 10. Jaeger configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -1966,7 +2015,56 @@ Multiple Jaeger environments with different names can be deployed in the same re
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 10. Metrics configuration</caption>
+<caption class="title">Table 11. [Only for Elasticsearch backend] Elasticsearch configuration</caption>
+<colgroup>
+<col style="width: 16%;">
+<col style="width: 11%;">
+<col style="width: 73%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter label (name)</th>
+<th class="tableblock halign-left valign-top">Default value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Elasticsearch version
+(<code>ESEngineVersion</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Elasticsearch_7.10</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The version of OpenSearch to use. The value must be in the format OpenSearch_X.Y or Elasticsearch_X.Y.
+For information about supported versions, see <a href="https://docs.aws.amazon.com/opensearch-service/latest/developerguide/what-is.html#choosing-version" class="bare">https://docs.aws.amazon.com/opensearch-service/latest/developerguide/what-is.html#choosing-version</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of data nodes
+(<code>ESInstanceCount</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The number of data nodes (instances) to use in the OpenSearch Service domain.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data node instance type
+(<code>ESInstanceType</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>t3.small.search</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The instance type for your data nodes.
+For valid values, see <a href="https://docs.aws.amazon.com/opensearch-service/latest/developerguide/supported-instance-types.html" class="bare">https://docs.aws.amazon.com/opensearch-service/latest/developerguide/supported-instance-types.html</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data node volume size
+(<code>ESVolumeSize</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>10</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The size (in GiB) of the EBS volume for each data node.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data node volume type
+(<code>ESVolumeType</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gp2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The EBS volume type to use with the OpenSearch Service domain, such as standard, gp2, or io1.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 12. Metrics configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2014,7 +2112,7 @@ Container Insights ensure performance metrics are available in CloudWatch.</p></
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 11. DNS configuration</caption>
+<caption class="title">Table 13. DNS configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2082,7 +2180,7 @@ Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 12. AWS Quick Start configuration</caption>
+<caption class="title">Table 14. AWS Quick Start configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">

@@ -30,6 +30,20 @@ Multiple Jaeger environments with different names can be deployed in the same re
 (`StorageBackend`)|`InMemory`|Jaeger storage backend.|Use internal load balancer
 (`InternalLoadBalancer`)|`No`|Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
 |===
+.[Only for Elasticsearch backend] Elasticsearch configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|Elasticsearch version
+(`ESEngineVersion`)|`Elasticsearch_7.10`|The version of OpenSearch to use. The value must be in the format OpenSearch_X.Y or Elasticsearch_X.Y. 
+For information about supported versions, see https://docs.aws.amazon.com/opensearch-service/latest/developerguide/what-is.html#choosing-version.
+|Number of data nodes
+(`ESInstanceCount`)|`2`|The number of data nodes (instances) to use in the OpenSearch Service domain.|Data node instance type
+(`ESInstanceType`)|`t3.small.search`|The instance type for your data nodes. 
+For valid values, see https://docs.aws.amazon.com/opensearch-service/latest/developerguide/supported-instance-types.html.
+|Data node volume size
+(`ESVolumeSize`)|`10`|The size (in GiB) of the EBS volume for each data node.|Data node volume type
+(`ESVolumeType`)|`gp2`|The EBS volume type to use with the OpenSearch Service domain, such as standard, gp2, or io1.
+|===
 .Metrics configuration
 [width="100%",cols="16%,11%,73%",options="header",]
 |===
