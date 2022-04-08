@@ -1733,6 +1733,19 @@ For valid values, see <a href="https://docs.aws.amazon.com/opensearch-service/la
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>gp2</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The EBS volume type to use with the OpenSearch Service domain, such as standard, gp2, or io1.</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dependencies job schedule
+(<code>ESDependenciesJobSchedule</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0 1 \* * *</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cron expression that is used to re-build service dependencies (default is daily at 1am).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dependencies job time range
+(<code>ESDependenciesJobTimeRange</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>24h</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">How far in the past the job should look to for spans, the maximum and default is <code>24h</code>.
+Any value accepted by [date-math](<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/common-options.html#date-math" class="bare">https://www.elastic.co/guide/en/elasticsearch/reference/current/common-options.html#date-math</a>) can be used here, but the anchor is always <code>now</code>.</p></td>
+</tr>
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
@@ -2060,6 +2073,19 @@ For valid values, see <a href="https://docs.aws.amazon.com/opensearch-service/la
 (<code>ESVolumeType</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>gp2</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The EBS volume type to use with the OpenSearch Service domain, such as standard, gp2, or io1.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dependencies job schedule
+(<code>ESDependenciesJobSchedule</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0 1 \* * *</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cron expression that is used to re-build service dependencies (default is daily at 1am).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dependencies job time range
+(<code>ESDependenciesJobTimeRange</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>24h</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">How far in the past the job should look to for spans, the maximum and default is <code>24h</code>.
+Any value accepted by [date-math](<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/common-options.html#date-math" class="bare">https://www.elastic.co/guide/en/elasticsearch/reference/current/common-options.html#date-math</a>) can be used here, but the anchor is always <code>now</code>.</p></td>
 </tr>
 </tbody>
 </table>
