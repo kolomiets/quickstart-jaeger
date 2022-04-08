@@ -47,6 +47,18 @@ Parameters:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
 
+# Elasticsearch parameters
+  ESEngineVersion: 
+    Type: String
+  ESInstanceCount:
+    Type: Number
+  ESInstanceType:
+    Type: String
+  ESVolumeSize:
+    Type: Number
+  ESVolumeType:
+    Type: String
+
 # Metrics Scrape parameters
   EnableContainerInsights:
     Type: String
@@ -177,17 +189,26 @@ Resources:
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
+        # Basic Configuration
         EnvironmentName: !Ref EnvironmentName
+        # VPC parameters
         VPCID: !Ref VPCID
         VPCCIDR: !Ref VPCCIDR
         PrivateSubnet1ID: !Ref PrivateSubnet1ID
         PrivateSubnet2ID: !Ref PrivateSubnet2ID
         PrivateSubnet3ID: !Ref PrivateSubnet3ID
+        # Jaeger parameters
         ClusterArn: !GetAtt Cluster.Arn
         LoadBalancerArn: !Ref LoadBalancer
         LoadBalancerDomainName: !GetAtt LoadBalancer.DNSName
         JaegerVersion: !Ref JaegerVersion
         ExportMetrics: !Ref ExportMetrics
+        # Elasticsearch parameters
+        ESEngineVersion: !Ref ESEngineVersion 
+        ESInstanceCount: !Ref ESInstanceCount
+        ESInstanceType: !Ref ESInstanceType
+        ESVolumeSize: !Ref ESVolumeSize
+        ESVolumeType: !Ref ESVolumeType
 
   MetricsStack:
     Type: AWS::CloudFormation::Stack

@@ -50,6 +50,14 @@ Metadata:
           - StorageBackend
           - InternalLoadBalancer
       - Label:
+          default: "[Only for Elasticsearch backend] Elasticsearch configuration"
+        Parameters:
+          - ESEngineVersion
+          - ESInstanceCount
+          - ESInstanceType
+          - ESVolumeSize
+          - ESVolumeType
+      - Label:
           default: Metrics configuration
         Parameters:
           - EnableContainerInsights
@@ -102,6 +110,17 @@ Metadata:
         default: Jaeger storage backend
       InternalLoadBalancer:
         default: Use internal load balancer
+    # Elasticsearch parameters
+      ESEngineVersion: 
+        default: Elasticsearch version
+      ESInstanceCount:
+        default: Number of data nodes
+      ESInstanceType:
+        default: Data node instance type
+      ESVolumeSize:
+        default: Data node volume size
+      ESVolumeType:
+        default: Data node volume type
     # Metrics configuration
       EnableContainerInsights:
         default: Enable Amazon CloudWatch Container Inrights
@@ -194,6 +213,32 @@ Parameters:
     AllowedValues: [ 'Yes', 'No' ]
     Default: 'No'
     Description: Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
+
+# Elasticsearch parameters
+  ESEngineVersion: 
+    Type: String
+    Default: Elasticsearch_7.10
+    Description: | 
+      The version of OpenSearch to use. The value must be in the format OpenSearch_X.Y or Elasticsearch_X.Y. 
+      For information about supported versions, see https://docs.aws.amazon.com/opensearch-service/latest/developerguide/what-is.html#choosing-version.
+  ESInstanceCount:
+    Type: Number
+    Default: 2
+    Description: The number of data nodes (instances) to use in the OpenSearch Service domain.
+  ESInstanceType:
+    Type: String
+    Default: t3.small.search
+    Description: |
+      The instance type for your data nodes. 
+      For valid values, see https://docs.aws.amazon.com/opensearch-service/latest/developerguide/supported-instance-types.html.
+  ESVolumeSize:
+    Type: Number
+    Default: 10
+    Description: The size (in GiB) of the EBS volume for each data node.
+  ESVolumeType:
+    Type: String
+    Default: gp2
+    Description: The EBS volume type to use with the OpenSearch Service domain, such as standard, gp2, or io1.
 
 # Metrics Scrape parameters
   EnableContainerInsights:
@@ -317,6 +362,12 @@ Resources:
         JaegerVersion: !Ref JaegerVersion
         StorageBackend: !Ref StorageBackend
         InternalLoadBalancer: !Ref InternalLoadBalancer
+        # Elasticsearch parameters
+        ESEngineVersion: !Ref ESEngineVersion 
+        ESInstanceCount: !Ref ESInstanceCount
+        ESInstanceType: !Ref ESInstanceType
+        ESVolumeSize: !Ref ESVolumeSize
+        ESVolumeType: !Ref ESVolumeType
         # Metrics Scrape parameters
         EnableContainerInsights: !Ref EnableContainerInsights
         ExportMetrics: !Ref ExportMetrics

@@ -30,6 +30,17 @@ Parameters:
   ExportMetrics:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
+# Elasticsearch parameters
+  ESEngineVersion: 
+    Type: String
+  ESInstanceCount:
+    Type: Number
+  ESInstanceType:
+    Type: String
+  ESVolumeSize:
+    Type: Number
+  ESVolumeType:
+    Type: String
 
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
@@ -178,35 +189,15 @@ Resources:
   SearchDomain:
     Type: AWS::OpenSearchService::Domain
     Properties:
-      AdvancedSecurityOptions:
-        Enabled: true
-        InternalUserDatabaseEnabled: true
-        MasterUserOptions:
-          MasterUserName: master-user
-          MasterUserPassword: !Sub "{{resolve:secretsmanager:${SearchDomainMasterUserSecret}:SecretString:password::}}"
+      DomainName: jaeger-traces
+      EngineVersion: !Ref ESEngineVersion
       ClusterConfig:
         DedicatedMasterEnabled: false
-        InstanceCount: 2
-        InstanceType: t3.small.search
-        ZoneAwarenessConfig:
-          AvailabilityZoneCount: 2
+        InstanceCount: !Ref ESInstanceCount
+        InstanceType: !Ref ESInstanceType
         ZoneAwarenessEnabled: true
-      CognitoOptions:
-        Enabled: false
-      DomainEndpointOptions:
-        EnforceHTTPS: true
-        TLSSecurityPolicy: Policy-Min-TLS-1-0-2019-07
-      DomainName: jaeger-traces
-      EBSOptions:
-        EBSEnabled: true
-        VolumeSize: 10
-        VolumeType: gp2
-      EncryptionAtRestOptions:
-        Enabled: true
-      EngineVersion: Elasticsearch_7.10
-      LogPublishingOptions: {}
-      NodeToNodeEncryptionOptions:
-        Enabled: true
+        ZoneAwarenessConfig:
+          AvailabilityZoneCount: !If [Using3AvailabilityZones, 3, 2]
       VPCOptions:
         SecurityGroupIds:
           - !GetAtt SearchDomainSecurityGroup.GroupId
@@ -214,6 +205,40 @@ Resources:
           - !Ref PrivateSubnet1ID
           - !Ref PrivateSubnet2ID
           - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
+      AccessPolicies: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*"
+              },
+              "Action": "es:*",
+              "Resource": "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/jaeger-traces/*"
+            }
+          ]
+        }
+      AdvancedSecurityOptions:
+        Enabled: true
+        InternalUserDatabaseEnabled: true
+        MasterUserOptions:
+          MasterUserName: master-user
+          MasterUserPassword: !Sub "{{resolve:secretsmanager:${SearchDomainMasterUserSecret}:SecretString:password::}}"
+      CognitoOptions:
+        Enabled: false
+      DomainEndpointOptions:
+        EnforceHTTPS: true
+        TLSSecurityPolicy: Policy-Min-TLS-1-0-2019-07
+      EBSOptions:
+        EBSEnabled: true
+        VolumeSize: !Ref ESVolumeSize
+        VolumeType: !Ref ESVolumeType
+      EncryptionAtRestOptions:
+        Enabled: true
+      LogPublishingOptions: {}
+      NodeToNodeEncryptionOptions:
+        Enabled: true
     UpdatePolicy:
       EnableVersionUpgrade: true
     UpdateReplacePolicy: Delete
