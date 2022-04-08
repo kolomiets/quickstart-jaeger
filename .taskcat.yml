@@ -10,16 +10,37 @@ project:
 
 tests:
 
-  deploy-in-2-az-with-defaults:
+  # inmemory-in-2-az-with-defaults:
+  #   parameters:
+  #     AvailabilityZones: $[taskcat_genaz_2]
+  #     NumberOfAZs: 2
+  #   regions:
+  #   - eu-west-1
+
+  # inmemory-in-2-az-with-optional-settings:
+  #   parameters:
+  #     AvailabilityZones: $[taskcat_genaz_2]
+  #     NumberOfAZs: 2
+  #     DomainName: annakolomiets.com
+  #     PublicDNS: UseExisting
+  #     PublicHostedZoneId: Z3P6BQGXXBOMGS
+  #     PrivateDNS: CreateNew
+  #     Certificate: CreateNew
+  #     ExportMetrics: 'Yes'
+  #   regions:
+  #   - eu-west-1
+
+  elasticsearch-in-2-az-with-defaults:
     parameters:
       AvailabilityZones: $[taskcat_genaz_2]
       NumberOfAZs: 2
+      StorageBackend: Elasticseach
     regions:
     - eu-west-1
 
-  deploy-in-3-az-with-defaults:
-    parameters:
-      AvailabilityZones: $[taskcat_genaz_3]
-      NumberOfAZs: 3
-    regions:
-    - us-east-1
+  # deploy-in-3-az-with-defaults:
+  #   parameters:
+  #     AvailabilityZones: $[taskcat_genaz_3]
+  #     NumberOfAZs: 3
+  #   regions:
+  #   - us-east-1

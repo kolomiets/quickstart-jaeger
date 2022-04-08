@@ -606,6 +606,67 @@ Resources:
       RequiresCompatibilities:
         - FARGATE
 
+  DependenciesSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: quickstart-jaeger/jaeger/jaeger-dependencies-job/SecurityGroup
+      VpcId: !Ref VPCID
+      SecurityGroupEgress:
+        - CidrIp: !Ref VPCCIDR
+          Description: Allow VPC outbound traffic by default
+          IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+
+  DependenciesTaskSchedulerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+      Policies:
+        - PolicyName: jaeger-dependencies-scheduler-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - ecs:RunTask
+                Effect: Allow
+                Resource:  
+                  - !Ref DependenciesTaskDefinition
+                Condition:
+                  ArnEquals:
+                    "ecs:cluster": !Ref ClusterArn
+
+  DependenciesJobTrigger:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Jaeger Dependencies trigger according to the specified schedule
+      ScheduleExpression: cron(10 * * * ? *)
+      State: ENABLED
+      Targets:
+      - Id: !Sub '${ServiceName}-Fargate-Task'
+        Arn: !Ref ClusterArn
+        RoleArn: !GetAtt DependenciesTaskSchedulerRole.Arn
+        EcsParameters:
+          TaskDefinitionArn: !Ref DependenciesTaskDefinition
+          TaskCount: 1
+          LaunchType: 'FARGATE'
+          PlatformVersion: 'LATEST'
+          NetworkConfiguration:
+            AwsVpcConfiguration:
+              AssignPublicIp: DISABLED
+              SecurityGroups:
+                - !GetAtt DependenciesSecurityGroup.GroupId
+              Subnets:
+                - !Ref PrivateSubnet1ID
+                - !Ref PrivateSubnet2ID
+                - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
+
 Outputs:
   ScrapeTargets:
     Value: !Sub "${LoadBalancerDomainName}:14269,${LoadBalancerDomainName}:16687"
