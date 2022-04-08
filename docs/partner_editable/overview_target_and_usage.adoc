@@ -3,6 +3,7 @@ This Quick Start reference deployment guide provides step-by-step instructions f
 Jaeger, inspired by https://research.google.com/pubs/pub36356.html[Dapper] and https://zipkin.io/[OpenZipkin], 
 is a distributed tracing platform created by https://uber.github.io/[Uber Technologies] and donated to 
 https://cncf.io/[Cloud Native Computing Foundation]. It can be used for monitoring microservices-based distributed systems:
+
 * Distributed context propagation
 * Distributed transaction monitoring
 * Root cause analysis
