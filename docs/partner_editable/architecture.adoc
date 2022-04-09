@@ -3,9 +3,10 @@ Deploying this Quick Start for a new virtual private cloud (VPC) with
 AWS Cloud.
 
 // Replace this example diagram with your own. Send us your source PowerPoint file. Be sure to follow our guidelines here : http://(we should include these points on our contributors giude)
-image::architecture_diagram.png[image,width=648,height=439]
 
-Figure 1: Quick Start architecture for _{partner-product-name}_ on AWS
+[#img-aws-architecture]
+.Quick Start architecture for _{partner-product-name}_ Jaeger on AWS
+image::architecture_diagram.png[Quick Start architecture for _{partner-product-name}_ Jaeger on AWS]
 
 As shown in Figure 1, the Quick Start sets up the following:
 
@@ -27,3 +28,15 @@ In the private subnets:
 *The template that deploys the Quick Start into an existing VPC skips
 the components marked by asterisks and prompts you for your existing VPC
 configuration.
+
+=== Storage Backend
+TBD
+
+=== DNS configuration
+TBD
+
+=== Container Insights integration
+TBD
+
+=== Exporting Jaeger metrics
+TBD

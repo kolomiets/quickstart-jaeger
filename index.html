@@ -964,10 +964,6 @@ is a distributed tracing platform created by <a href="https://uber.github.io/">U
 </ul>
 </div>
 <div class="paragraph">
-<p>This Quick Start is for users who want a repeatable, customizable reference deployment
-for Jaeger using <a href="https://aws.amazon.com/cloudformation/">AWS CloudFormation</a>.</p>
-</div>
-<div class="paragraph">
 <p>This Quick Start helps you to deploy a <a href="https://docs.aws.amazon.com/whitepapers/latest/real-time-communication-on-aws/high-availability-and-scalability-on-aws.html">highly available</a> Jaeger - open source, end-to-end
 distributed tracing backend on the Amazon Web Services (AWS) Cloud.</p>
 </div>
@@ -986,7 +982,9 @@ in your AWS account in about 10-30 minutes. The Quick Start automates the follow
 </ul>
 </div>
 <div class="paragraph">
-<p>You can also use the AWS CloudFormation templates as a starting point for your own implementation.</p>
+<p>This Quick Start is for users who want a repeatable, customizable reference deployment
+for Jaeger using <a href="https://aws.amazon.com/cloudformation/">AWS CloudFormation</a>.
+You can also use the AWS CloudFormation templates as a starting point for your own implementation.</p>
 </div></div></td>
 </tr>
 </tbody>
@@ -1029,9 +1027,6 @@ Amazon may share user-deployment information with the AWS Partner that collabora
 <p><a href="https://aws.amazon.com/ecs/">Amazon ECS</a> - highly available Fargate cluster</p>
 </li>
 <li>
-<p><a href="https://aws.amazon.com/opensearch-service/">Amazon Opensearch</a> - highly available search cluster</p>
-</li>
-<li>
 <p><a href="https://aws.amazon.com/cloudwatch/">Amazon CloudWatch</a> - integration for logs and metrics</p>
 </li>
 <li>
@@ -1041,7 +1036,21 @@ Amazon may share user-deployment information with the AWS Partner that collabora
 <p><a href="https://aws.amazon.com/certificate-manager/">AWS Certificate Manager</a> - integration for TLS certificates</p>
 </li>
 <li>
-<p><a href="https://aws.amazon.com/prometheus/">Amazon Managed Service for Prometheus</a> - centralized metrics collection</p>
+<p><a href="https://aws.amazon.com/prometheus/">Amazon Managed Service for Prometheus</a> - managed Prometheus for centralized metrics collection</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In addition, depending on selected Jaeger <a href="https://www.jaegertracing.io/docs/1.32/deployment/#storage-backends">storage backend</a>,
+the Quick Start uses the following AWS services:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://aws.amazon.com/opensearch-service/">Amazon Opensearch</a> - highly available search cluster</p>
+</li>
+<li>
+<p><a href="https://aws.amazon.com/keyspaces/">Amazon Keyspaces (for Apache Cassandra)</a> - a scalable, highly available, and managed Apache Cassandra–compatible database service</p>
 </li>
 </ul>
 </div></div></td>
@@ -1109,18 +1118,25 @@ After you deploy the Quick Start, create <a href="https://docs.aws.amazon.com/aw
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<td class="tableblock halign-left valign-top"><div class="content"><div id="toc" class="toc">
+<div id="toctitle"></div>
+<ul class="sectlevel2">
+<li><a href="#_storage_backend">Storage Backend</a></li>
+<li><a href="#_dns_configuration">DNS configuration</a></li>
+<li><a href="#_container_insights_integration">Container Insights integration</a></li>
+<li><a href="#_exporting_jaeger_metrics">Exporting Jaeger metrics</a></li>
+</ul>
+</div>
+<div class="paragraph">
 <p>Deploying this Quick Start for a new virtual private cloud (VPC) with
 <strong>default parameters</strong> builds the following <em>Jaeger</em> environment in the
 AWS Cloud.</p>
 </div>
-<div class="imageblock">
+<div id="img-aws-architecture" class="imageblock">
 <div class="content">
-<img src="images/architecture_diagram.png" alt="image" width="648" height="439">
+<img src="images/architecture_diagram.png" alt="Quick Start architecture for _Jaeger_ Jaeger on AWS">
 </div>
-</div>
-<div class="paragraph">
-<p>Figure 1: Quick Start architecture for <em>Jaeger</em> on AWS</p>
+<div class="title">Figure 1. Quick Start architecture for <em>Jaeger</em> Jaeger on AWS</div>
 </div>
 <div class="paragraph">
 <p>As shown in Figure 1, the Quick Start sets up the following:</p>
@@ -1159,6 +1175,30 @@ Shell (SSH) access to EC2 instances in public and private subnets.*</p>
 <p>*The template that deploys the Quick Start into an existing VPC skips
 the components marked by asterisks and prompts you for your existing VPC
 configuration.</p>
+</div>
+<div class="sect2">
+<h3 id="_storage_backend">Storage Backend</h3>
+<div class="paragraph">
+<p>TBD</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dns_configuration">DNS configuration</h3>
+<div class="paragraph">
+<p>TBD</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_container_insights_integration">Container Insights integration</h3>
+<div class="paragraph">
+<p>TBD</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exporting_jaeger_metrics">Exporting Jaeger metrics</h3>
+<div class="paragraph">
+<p>TBD</p>
+</div>
 </div></div></td>
 </tr>
 </tbody>
@@ -1505,7 +1545,7 @@ Region</code>, and <code>Quick Start S3 key prefix</code>. Changing these parame
 <p>Monitor the status of the stack. When the status is <strong>CREATE_COMPLETE</strong>, the Jaeger deployment is ready.</p>
 </li>
 <li>
-<p>Use the values displayed in the <strong>Outputs</strong> tab for the stack, as shown in <a href="#cfn_outputs">Figure 1</a>, to view the created resources.</p>
+<p>Use the values displayed in the <strong>Outputs</strong> tab for the stack, as shown in <a href="#cfn_outputs">Figure 2</a>, to view the created resources.</p>
 </li>
 </ol>
 </div>
@@ -1513,7 +1553,7 @@ Region</code>, and <code>Quick Start S3 key prefix</code>. Changing these parame
 <div class="content">
 <a class="image" href="images/cfn_outputs.png"><img src="images/cfn_outputs.png" alt="cfn_outputs" width="648" height="439"></a>
 </div>
-<div class="title">Figure 1. Jaeger outputs after successful deployment</div>
+<div class="title">Figure 2. Jaeger outputs after successful deployment</div>
 </div>
 </div>
 <div class="paragraph">
