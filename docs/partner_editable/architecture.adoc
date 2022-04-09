@@ -28,14 +28,14 @@ In the private subnets:
 the components marked by asterisks and prompts you for your existing VPC
 configuration.
 
-== Storage Backend
+=== Storage Backend
 TBD
 
-== DNS configuration
+=== DNS configuration
 TBD
 
-== Container Insights integration
+=== Container Insights integration
 TBD
 
-== Exporting Jaeger metrics
+=== Exporting Jaeger metrics
 TBD
