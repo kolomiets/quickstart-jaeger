@@ -29,10 +29,68 @@ the components marked by asterisks and prompts you for your existing VPC
 configuration.
 
 === Storage Backend
-TBD
+Jaeger supports multiple options for https://www.jaegertracing.io/docs/1.32/deployment/#storage-backends[persisted storage backends].
+This Quick Start supports the following backend options:
+
+* *Elasticsearch* - production-ready storage backend, recommended for large scale production deployments by the Jaeger team.
+* *In-memory* storage - the in-memory storage is not intended for production workloads. 
+It’s intended as a simple solution to get started quickly and data will be lost once the process is gone.
+
+See the following sections for details on target AWS architecture that this Quick Start deploys, 
+depending on the storage type selected.
+
+==== Elasticsearch storage backend architecture
+
+[#img-elasticsearch-architecture]
+.Quick Start architecture for _{partner-product-name}_ on AWS with Elasticsearch backend
+image::architecture_elasticsearch_diagram.png[Quick Start architecture for _{partner-product-name}_ on AWS with Elasticsearch backend]
+
+Elasticsearch storage backend is the recommended option for large scale production Jaeger deployments.
+The Quick Start exposes a number of parameters to provision an Elasticsearch cluster adjusted for your needs - 
+see link:#_parameter_reference[Parameter reference] for additional details. 
+
+With all the optional components disabled, the following components are deployed:
+
+* https://aws.amazon.com/opensearch-service/[Amazon OpenSearch] cluster 
+* https://aws.amazon.com/fargate/[ECS Fargate] cluster   
+* ECS Service for https://www.jaegertracing.io/docs/1.32/architecture/#collector[Jaeger Collector service]. The service runs tasks
+distributed across multiple Availability Zones and distributes traffic between them
+* ECS Service for https://www.jaegertracing.io/docs/1.32/architecture/#query[Jaeger Query service]. The service runs tasks
+distributed across multiple Availability Zones and distributes traffic between them
+* ECS Task, triggered according to provided cron schedule (once a day, by default). The purpose of the job is to build the connection
+graph between services, based on the collected traces. See https://www.jaegertracing.io/docs/1.32/faq/#why-is-the-dependencies-page-empty[
+Jaeger documentation] for additional details on this job.
+* Network Load Balancer that exposes https://www.jaegertracing.io/docs/1.32/architecture/#query[Jaeger Query service] to the clients
+
+==== In-memory storage backend architecture
+
+[#img-memory-architecture]
+.Quick Start architecture for _{partner-product-name}_ on AWS with In-memory backend
+image::architecture_memory_diagram.png[Quick Start architecture for _{partner-product-name}_ on AWS with In-memory backend]
+
+Jaeger deployed with in-memory storage is *not* highly available / resilient. As in-memory storage can't be shared between
+containers, there is only one Jaeger ECS task running at any given moment of time. If the task is terminated, all traces 
+are lost.
+
+This is the simplest Jaeger deployment on AWS this Quick Start provides. With all the optional components disabled,
+the following components are deployed:
+
+* ECS Fargate cluster
+* ECS Service that runs a single Jaeger task using [https://www.jaegertracing.io/docs/1.32/deployment/#all-in-one]all-in-one Jaeger distribution
+* Network Load Balancer that exposes https://www.jaegertracing.io/docs/1.32/architecture/#query[Jaeger Query service] to the clients    
+
+In-memory storage backend is ideal for rapid prototyping, proof of concept work, experimentation, etc. 
 
 === DNS configuration
 TBD
+
+==== Load Balancer visibility
+
+==== Public DNS
+
+==== Private DNS
+
+==== TLS certificates
 
 === Container Insights integration
 TBD
