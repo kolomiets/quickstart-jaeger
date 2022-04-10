@@ -1179,13 +1179,122 @@ configuration.</p>
 <div class="sect2">
 <h3 id="_storage_backend">Storage Backend</h3>
 <div class="paragraph">
-<p>TBD</p>
+<p>Jaeger supports multiple options for <a href="https://www.jaegertracing.io/docs/1.32/deployment/#storage-backends">persisted storage backends</a>.
+This Quick Start supports the following backend options:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Elasticsearch</strong> - production-ready storage backend, recommended for large scale production deployments by the Jaeger team.</p>
+</li>
+<li>
+<p><strong>In-memory</strong> storage - the in-memory storage is not intended for production workloads.
+It’s intended as a simple solution to get started quickly and data will be lost once the process is gone.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>See the following sections for details on target AWS architecture that this Quick Start deploys,
+depending on the storage type selected.</p>
+</div>
+<div class="sect3">
+<h4 id="_elasticsearch_storage_backend_architecture">Elasticsearch storage backend architecture</h4>
+<div id="img-elasticsearch-architecture" class="imageblock">
+<div class="content">
+<img src="images/architecture_elasticsearch_diagram.png" alt="Quick Start architecture for _Jaeger_ on AWS with Elasticsearch backend">
+</div>
+<div class="title">Figure 2. Quick Start architecture for <em>Jaeger</em> on AWS with Elasticsearch backend</div>
+</div>
+<div class="paragraph">
+<p>Elasticsearch storage backend is the recommended option for large scale production Jaeger deployments.
+The Quick Start exposes a number of parameters to provision an Elasticsearch cluster adjusted for your needs -
+see <a href="#_parameter_reference">Parameter reference</a> for additional details.</p>
+</div>
+<div class="paragraph">
+<p>With all the optional components disabled, the following components are deployed:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://aws.amazon.com/opensearch-service/">Amazon OpenSearch</a> cluster</p>
+</li>
+<li>
+<p><a href="https://aws.amazon.com/fargate/">ECS Fargate</a> cluster</p>
+</li>
+<li>
+<p>ECS Service for <a href="https://www.jaegertracing.io/docs/1.32/architecture/#collector">Jaeger Collector service</a>. The service runs tasks
+distributed across multiple Availability Zones and distributes traffic between them</p>
+</li>
+<li>
+<p>ECS Service for <a href="https://www.jaegertracing.io/docs/1.32/architecture/#query">Jaeger Query service</a>. The service runs tasks
+distributed across multiple Availability Zones and distributes traffic between them</p>
+</li>
+<li>
+<p>ECS Task, triggered according to provided cron schedule (once a day, by default). The purpose of the job is to build the connection
+graph between services, based on the collected traces. See <a href="https://www.jaegertracing.io/docs/1.32/faq/#why-is-the-dependencies-page-empty">
+Jaeger documentation</a> for additional details on this job.</p>
+</li>
+<li>
+<p>Network Load Balancer that exposes <a href="https://www.jaegertracing.io/docs/1.32/architecture/#query">Jaeger Query service</a> to the clients</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_in_memory_storage_backend_architecture">In-memory storage backend architecture</h4>
+<div id="img-memory-architecture" class="imageblock">
+<div class="content">
+<img src="images/architecture_memory_diagram.png" alt="Quick Start architecture for _Jaeger_ on AWS with In-memory backend">
+</div>
+<div class="title">Figure 3. Quick Start architecture for <em>Jaeger</em> on AWS with In-memory backend</div>
+</div>
+<div class="paragraph">
+<p>Jaeger deployed with in-memory storage is <strong>not</strong> highly available / resilient. As in-memory storage can&#8217;t be shared between
+containers, there is only one Jaeger ECS task running at any given moment of time. If the task is terminated, all traces
+are lost.</p>
+</div>
+<div class="paragraph">
+<p>This is the simplest Jaeger deployment on AWS this Quick Start provides. With all the optional components disabled,
+the following components are deployed:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ECS Fargate cluster</p>
+</li>
+<li>
+<p>ECS Service that runs a single Jaeger task using [<a href="https://www.jaegertracing.io/docs/1.32/deployment/#all-in-one" class="bare">https://www.jaegertracing.io/docs/1.32/deployment/#all-in-one</a>]all-in-one Jaeger distribution</p>
+</li>
+<li>
+<p>Network Load Balancer that exposes <a href="https://www.jaegertracing.io/docs/1.32/architecture/#query">Jaeger Query service</a> to the clients</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In-memory storage backend is ideal for rapid prototyping, proof of concept work, experimentation, etc.</p>
+</div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_dns_configuration">DNS configuration</h3>
 <div class="paragraph">
 <p>TBD</p>
+</div>
+<div class="sect3">
+<h4 id="_load_balancer_visibility">Load Balancer visibility</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_public_dns">Public DNS</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_private_dns">Private DNS</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_tls_certificates">TLS certificates</h4>
+
 </div>
 </div>
 <div class="sect2">
@@ -1545,7 +1654,7 @@ Region</code>, and <code>Quick Start S3 key prefix</code>. Changing these parame
 <p>Monitor the status of the stack. When the status is <strong>CREATE_COMPLETE</strong>, the Jaeger deployment is ready.</p>
 </li>
 <li>
-<p>Use the values displayed in the <strong>Outputs</strong> tab for the stack, as shown in <a href="#cfn_outputs">Figure 2</a>, to view the created resources.</p>
+<p>Use the values displayed in the <strong>Outputs</strong> tab for the stack, as shown in <a href="#cfn_outputs">Figure 4</a>, to view the created resources.</p>
 </li>
 </ol>
 </div>
@@ -1553,7 +1662,7 @@ Region</code>, and <code>Quick Start S3 key prefix</code>. Changing these parame
 <div class="content">
 <a class="image" href="images/cfn_outputs.png"><img src="images/cfn_outputs.png" alt="cfn_outputs" width="648" height="439"></a>
 </div>
-<div class="title">Figure 2. Jaeger outputs after successful deployment</div>
+<div class="title">Figure 4. Jaeger outputs after successful deployment</div>
 </div>
 </div>
 <div class="paragraph">
