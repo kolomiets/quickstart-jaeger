@@ -1725,17 +1725,14 @@ Certain Regions are available on an opt-in basis. For more information, see <a h
 <ol class="arabic">
 <li>
 <p>Sign in to your AWS account at <a href="https://aws.amazon.com" class="bare">https://aws.amazon.com</a> with an IAM user role that has the necessary permissions. For more information, see
-<a href="#planning-the-deployment">Planning the deployment</a>, earlier in this guide.</p>
+<a href="#_planning_the_deployment">Planning the deployment</a>, earlier in this guide.</p>
 </li>
 <li>
 <p>Ensure that your AWS account is configured correctly, as discussed in the
-<a href="#technical-requirements">Technical requirements</a> section.</p>
+<a href="#_technical_requirements">Technical requirements</a> section.</p>
 </li>
 <li>
-<p>Use the Region selector in the navigation bar to choose the AWS Region where you want to deploy Amazon EKS.</p>
-</li>
-<li>
-<p>Select the key pair that you created earlier. In the navigation pane of the <a href="https://console.aws.amazon.com/ec2/" target="_blank" rel="noopener">Amazon EC2 console</a>, choose <strong>Key Pairs</strong>, and then choose your key pair from the list.</p>
+<p>Use the Region selector in the navigation bar to choose the AWS Region where you want to deploy Jaeger.</p>
 </li>
 </ol>
 </div>
@@ -1744,9 +1741,6 @@ Certain Regions are available on an opt-in basis. For more information, see <a h
 <h3 id="_launch_the_quick_start">Launch the Quick Start</h3>
 <div class="olist arabic">
 <ol class="arabic">
-<li>
-<p>Optionally, if you want to configure advanced parameters, launch the <a href="https://fwd.aws/6dEQ7" target="_blank" rel="noopener">advanced configuration template</a>.</p>
-</li>
 <li>
 <p>Choose one of the following options to launch the AWS CloudFormation template into your AWS account. For help with choosing an option, see <a href="#_deployment_options">Deployment options</a>, earlier in this guide.</p>
 </li>
@@ -1758,52 +1752,21 @@ Certain Regions are available on an opt-in basis. For more information, see <a h
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://fwd.aws/6dEQ7" target="_blank" rel="noopener">Deploy Amazon EKS into a new VPC</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://fwd.aws/6dEQ7" target="_blank" rel="noopener">Deploy Jaeger into a new VPC</a></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://fwd.aws/e37MA" target="_blank" rel="noopener">Deploy Amazon EKS into an existing VPC</a></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://fwd.aws/VBeX6" target="_blank" rel="noopener">Enable EKS based Quick Starts on an existing EKS cluster</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://fwd.aws/e37MA" target="_blank" rel="noopener">Deploy Jaeger into an existing VPC</a></p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
 <p>Deployment can take between 15 minutes to 1 hour to complete, depending on the chosen deployment option and parameter values.</p>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-If you deploy Amazon EKS into an existing VPC, ensure that your VPC has private subnets in different Availability Zones for the workload instances. The subnets require egress internet access using a NAT gateway or an HTTP proxy. If you want to use the Kubernetes integration with Elastic Load Balancing, you must tag each private subnet with <code>kubernetes.io/role/internal-elb=true</code> and each public subnet with <code>kubernetes.io/role/elb=true</code>.
-</td>
-</tr>
-</table>
-</div>
 <div class="olist arabic">
 <ol class="arabic" start="3">
 <li>
-<p>Check the Region that’s displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the network infrastructure for Amazon EKS is built. The template launches in the US East (Ohio) Region by default.</p>
+<p>Check the Region that’s displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the infrastructure for Jaeger is built. The template launches in the US East (Ohio) Region by default.</p>
 </li>
-</ol>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Some services are not supported in all AWS Regions. For a current list of supported Regions, see <a href="https://docs.aws.amazon.com/general/latest/gr/eks.html" target="_blank" rel="noopener">Amazon Elastic Kubernetes Service endpoints and quotas</a>.
-</td>
-</tr>
-</table>
-</div>
-<div class="olist arabic">
-<ol class="arabic" start="4">
 <li>
 <p>On the <strong>Select template</strong> page, keep the default setting for the template URL, and then choose <strong>Next</strong>.</p>
 </li>
@@ -1811,30 +1774,6 @@ Some services are not supported in all AWS Regions. For a current list of suppor
 <p>On the <strong>Specify stack details</strong> page, change the stack name if needed. Review the parameters for the template, and provide values for any parameters that require input. For all other parameters, review the default settings, and customize them as necessary.</p>
 </li>
 </ol>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-If Amazon EKS is already deployed in your account, ensure that the <code>Per account shared resources</code> parameter is set to <strong>No</strong>. If you deploy a new Amazon EKS instance in the same Region as a previously deployed instance, set <code>Per region shared resources</code> to <strong>No</strong>.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-If you created and intend to use an advanced configuration stack, ensure that you set the value for <code>Config set name</code> to match the value you used when you launched the advanced configuration stack.
-</td>
-</tr>
-</table>
 </div>
 <div class="admonitionblock note">
 <table>
