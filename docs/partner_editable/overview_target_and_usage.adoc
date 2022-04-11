@@ -24,4 +24,5 @@ in your AWS account in about 10-30 minutes. The Quick Start automates the follow
 
 This Quick Start is for users who want a repeatable, customizable reference deployment 
 for Jaeger using https://aws.amazon.com/cloudformation/[AWS CloudFormation].
-You can also use the AWS CloudFormation templates as a starting point for your own implementation.
+
+You can also use the provided AWS CloudFormation templates as a starting point for your own implementation.

@@ -2,6 +2,8 @@
 
 == FAQ
 
+NOTE: Refer to the official https://www.jaegertracing.io/docs/1.32/faq/[Jaeger FAQ] for the latest updates.
+
 *Q.* I encountered a *CREATE_FAILED* error when I launched the Quick Start.
 
 *A.* If AWS CloudFormation fails to create the stack, we recommend that you relaunch the template with *Rollback on failure* set to *No*. (This setting is under *Advanced* in the AWS CloudFormation console, *Options* page.) With this setting, the stack’s state is retained and the instance is left running, so you can troubleshoot the issue. (For Windows, look at the log files in %ProgramFiles%\Amazon\EC2ConfigService and C:\cfn\log.)
@@ -18,4 +20,4 @@ For additional information, see https://docs.aws.amazon.com/AWSCloudFormation/la
 
 == Troubleshooting
 
-<Steps for troubleshooting the deployment go here.>
+NOTE: Refer to the official https://www.jaegertracing.io/docs/1.32/troubleshooting/[Jaeger Troubleshooting] page.
