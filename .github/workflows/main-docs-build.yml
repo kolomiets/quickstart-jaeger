@@ -17,6 +17,8 @@ jobs:
           wget https://raw.githubusercontent.com/aws-quickstart/quickstart-documentation-base-common/main/.utils/configure_git_env.sh
           chmod +x configure_git_env.sh
           ./configure_git_env.sh
+    - name: Hotfix documentation repo
+      run: \cp -rf ./docs/hotfixes/_layout_cfn.adoc ./docs/boilerplate/_layout_cfn.adoc
     - name: Setup python
       uses: actions/setup-python@v2
       with:
