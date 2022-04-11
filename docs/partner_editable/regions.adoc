@@ -1,4 +1,0 @@
-This Quick Start supports the following Regions (regions where Amazon ECS Fargate and Amazon Opensearch are supported):
-
-- _us-east-1 (N. Virginia)_ (EXAMPLE)
-- _us-east-2 (Ohio)_ (EXAMPLE)

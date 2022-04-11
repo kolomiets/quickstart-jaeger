@@ -1,3 +1,7 @@
+ifndef::production_build[]
+:!toc:
+endif::production_build[]
+
 Deploying this Quick Start for a new virtual private cloud (VPC) with
 *default parameters* builds the following _{partner-product-name}_ environment in the
 AWS Cloud.
@@ -123,7 +127,7 @@ that it is publicly accessible) in contrast to the other Jaeger services
 By default: *disabled*
 
 An optional public DNS name can be configured for the load balancer - this would make it possible 
-to use a custom domain name, like jaeger.mydoman.com. This Quick Start can create a Roure 53 record
+to use a custom domain name, like `jaeger.mydoman.com`. This Quick Start can create a Roure 53 record
 in a public hosted zone to support this scenario. There are several ways to achieve this:
 
 - use an existing Route 53 public hosted zone - 
@@ -152,6 +156,7 @@ If you requested a new hosted zone for a subdomain, you would need to configure 
 
 ==== TLS certificates
 By default: *disabled*
+
 Prerequisite: Public DNS has to be configured
 
 An optional TLS certificate can be associated with the load balancer to enable encryption in transit for Jaeger clients. This is a highly recommended setup.
@@ -161,7 +166,7 @@ The Quick Start provides multiple options to enable the encryption:
 - use an existing ACM certificate - you can provide an ARN for the certificate as a parameter for the Quick Start
 - create new ACM certificate and associate it with the load balancer. 
 
-NOTE: If a new certificate is requested, the Quick Start performs DNS validation,
+WARNING: If a new certificate is requested, the Quick Start performs DNS validation,
 i.e. validation of DNS CNAME record created in a public hosted zone. If ACM can't validate the record,
 the Quick Start deployment will eventually fail. Keep this in mind if your hosted zone is not 
 internet-reachable (this may be the case when you requested a new public zone for a subdomain 
@@ -179,7 +184,7 @@ https://aws.amazon.com/prometheus/[Amazon Managed Service for Prometheus] (AMS).
 This is achieved by deploying an ECS Service with ADOT collector that scrapes the metrics from 
 Jaeger services and pushes them to AMS. You can configure the QuickStart to:
 
-- use an existing AMS workspace for export, or,
+- use an existing AMS workspace for export - you can provide an ARN for the workspace as a parameter for the Quick Start
 - create a new workspace
 
 Further, if metrics export is enabled, additional AWS-specific metrics from ECS cluster are exported to AWS CloudWatch:
