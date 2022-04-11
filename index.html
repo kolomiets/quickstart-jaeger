@@ -1123,6 +1123,8 @@ After you deploy the Quick Start, create <a href="https://docs.aws.amazon.com/aw
 <ul class="sectlevel2">
 <li><a href="#_storage_backend">Storage Backend</a></li>
 <li><a href="#_dns_configuration">DNS configuration</a></li>
+<li><a href="#_container_insights_integration">Container Insights integration</a></li>
+<li><a href="#_exporting_jaeger_metrics">Exporting Jaeger metrics</a></li>
 </ul>
 </div>
 <div class="paragraph">
@@ -1292,109 +1294,241 @@ provide additional information on different network topologies.</p>
 <div class="paragraph">
 <p>Network load balancer sits in front of ECS services and exposes a number of ports for the clients:</p>
 </div>
-</div>
-</div></div></td>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 60%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>Port</strong></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>Protocol</strong></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>Description</strong></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">=======</p></td>
+<td class="tableblock halign-center valign-middle"><p class="tableblock"><strong>14250</strong></p></td>
+<td class="tableblock halign-center valign-middle"><p class="tableblock">gRPC</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">accepts spans in <a href="https://developers.google.com/protocol-buffers">protobuf</a> format</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Port</strong></p></td>
+<td class="tableblock halign-center valign-middle"><p class="tableblock"><strong>14268</strong></p></td>
+<td class="tableblock halign-center valign-middle"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">accepts spans in Thrift format</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Protocol</strong></p></td>
+<td class="tableblock halign-center valign-middle" rowspan="2"><p class="tableblock"><strong>14269</strong></p></td>
+<td class="tableblock halign-center valign-middle" rowspan="2"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">[<strong>in-memory</strong> storage backend]: health check at <code>/</code> and Prometheus metrics at <code>/metrics</code> for both  <a href="https://www.jaegertracing.io/docs/1.32/architecture/#collector">Collector</a> and <a href="https://www.jaegertracing.io/docs/1.32/architecture/#query">Query</a> services</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>14250</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">[<strong>elasticsearch</strong> storage backend]: health check at <code>/</code> and metrics at <code>/metrics</code> for <a href="https://www.jaegertracing.io/docs/1.32/architecture/#collector">Collector</a> service</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">gRPC</p></td>
+<td class="tableblock halign-center valign-middle"><p class="tableblock"><strong>16687</strong></p></td>
+<td class="tableblock halign-center valign-middle"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">[<strong>elasticsearch</strong> storage backend only]: health check at <code>/</code> and Prometheus metrics at <code>/metrics</code> for <a href="https://www.jaegertracing.io/docs/1.32/architecture/#query">Query</a> service</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>14268</strong></p></td>
+<td class="tableblock halign-center valign-middle"><p class="tableblock"><strong>80</strong> / <strong>443</strong></p></td>
+<td class="tableblock halign-center valign-middle"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger UI at <code>/</code> and API endpoints at <code>/api/*</code></p></td>
 </tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>14269</strong></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>16687</strong></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>80</strong> / <strong>443</strong></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">=======</p>
-<p class="tableblock">NOTE: The load balancer is provisioned in <strong>public</strong> VPC subnets (public here does not necessarily mean
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The load balancer is provisioned in <strong>public</strong> VPC subnets (public here does not necessarily mean
 that it is publicly accessible) in contrast to the other Jaeger services
-(ECS services and tasks, Elasticseatch cluster) that run in <strong>private</strong> VPC subnets.</p>
-<p class="tableblock">==== Public DNS
-By default: <strong>disabled</strong></p>
-<p class="tableblock">An optional public DNS name can be configured for the load balancer - this would make it possible
+(ECS services and tasks, Elasticseatch cluster) that run in <strong>private</strong> VPC subnets.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_public_dns">Public DNS</h4>
+<div class="paragraph">
+<p>By default: <strong>disabled</strong></p>
+</div>
+<div class="paragraph">
+<p>An optional public DNS name can be configured for the load balancer - this would make it possible
 to use a custom domain name, like jaeger.mydoman.com. This Quick Start can create a Roure 53 record
 in a public hosted zone to support this scenario. There are several ways to achieve this:</p>
-<p class="tableblock">- use an existing Route 53 public hosted zone -
-you can provide the hosted zone ID as a parameter for the Quickstart
-- create a new public hosted zone and provision Jaeger DNS record there.</p>
-<p class="tableblock">NOTE: This Quick Start does not set up subdomain delegation (NS records).
-If you requested a new hosted zone for a subdomain, you would need to configure the delegation.</p>
-<p class="tableblock">==== Private DNS
-By default: <strong>disabled</strong></p>
-<p class="tableblock">An optional private DNS name can be configured for the load balancer and associated with the VPC -
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>use an existing Route 53 public hosted zone -
+you can provide the hosted zone ID as a parameter for the Quickstart</p>
+</li>
+<li>
+<p>create a new public hosted zone and provision Jaeger DNS record there.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This Quick Start does not set up subdomain delegation (NS records).
+If you requested a new hosted zone for a subdomain, you would need to configure the delegation.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_private_dns">Private DNS</h4>
+<div class="paragraph">
+<p>By default: <strong>disabled</strong></p>
+</div>
+<div class="paragraph">
+<p>An optional private DNS name can be configured for the load balancer and associated with the VPC -
 this would make it possible to use a custom domain name, like jaeger.mydoman.com from within your VPC.
 Usually, this makes sense when an internal load balancer is used.</p>
-<p class="tableblock">This Quick Start can create a Roure 53 record in a private hosted zone to support this scenario.
+</div>
+<div class="paragraph">
+<p>This Quick Start can create a Roure 53 record in a private hosted zone to support this scenario.
 There are several ways to achieve this:</p>
-<p class="tableblock">- use an existing Route 53 private hosted zone -
-you can provide the hosted zone ID as a parameter for the Quickstart
-- create a new private hosted zone and provision Jaeger DNS record there.</p>
-<p class="tableblock">NOTE: This Quick Start does not set up subdomain delegation (NS records).
-If you requested a new hosted zone for a subdomain, you would need to configure the delegation.</p>
-<p class="tableblock">==== TLS certificates
-By default: <strong>disabled</strong>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>use an existing Route 53 private hosted zone -
+you can provide the hosted zone ID as a parameter for the Quickstart</p>
+</li>
+<li>
+<p>create a new private hosted zone and provision Jaeger DNS record there.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This Quick Start does not set up subdomain delegation (NS records).
+If you requested a new hosted zone for a subdomain, you would need to configure the delegation.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_tls_certificates">TLS certificates</h4>
+<div class="paragraph">
+<p>By default: <strong>disabled</strong>
 Prerequisite: Public DNS has to be configured</p>
-<p class="tableblock">An optional TLS certificate can be associated with the load balancer to enable encryption in transit for Jaeger clients. This is a highly recommended setup.</p>
-<p class="tableblock">The Quick Start provides multiple options to enable the encryption:</p>
-<p class="tableblock">- use an existing ACM certificate - you can provide an ARN for the certificate as a parameter for the Quick Start
-- create new ACM certificate and associate it with the load balancer.</p>
-<p class="tableblock">NOTE: If a new certificate is requested, the Quick Start performs DNS validation,
+</div>
+<div class="paragraph">
+<p>An optional TLS certificate can be associated with the load balancer to enable encryption in transit for Jaeger clients. This is a highly recommended setup.</p>
+</div>
+<div class="paragraph">
+<p>The Quick Start provides multiple options to enable the encryption:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>use an existing ACM certificate - you can provide an ARN for the certificate as a parameter for the Quick Start</p>
+</li>
+<li>
+<p>create new ACM certificate and associate it with the load balancer.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If a new certificate is requested, the Quick Start performs DNS validation,
 i.e. validation of DNS CNAME record created in a public hosted zone. If ACM can&#8217;t validate the record,
 the Quick Start deployment will eventually fail. Keep this in mind if your hosted zone is not
 internet-reachable (this may be the case when you requested a new public zone for a subdomain
-but DNS delegation is not configured yet).</p>
-<p class="tableblock">=== Container Insights integration
-By default: <strong>disabled</strong></p>
-<p class="tableblock">=== Exporting Jaeger metrics
-By default: <strong>disabled</strong></p>
-<p class="tableblock">Jaeger services expose Prometheus metrics that may be useful to assess the health of the telemetry backend.
+but DNS delegation is not configured yet).
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_container_insights_integration">Container Insights integration</h3>
+<div class="paragraph">
+<p>By default: <strong>disabled</strong></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exporting_jaeger_metrics">Exporting Jaeger metrics</h3>
+<div class="paragraph">
+<p>By default: <strong>disabled</strong></p>
+</div>
+<div class="paragraph">
+<p>Jaeger services expose Prometheus metrics that may be useful to assess the health of the telemetry backend.
 The Quick Start can be optionally configured to expose these metrics and export them to
 <a href="https://aws.amazon.com/prometheus/">Amazon Managed Service for Prometheus</a> (AMS).
 This is achieved by deploying an ECS Service with ADOT collector that scrapes the metrics from
 Jaeger services and pushes them to AMS. You can configure the QuickStart to:</p>
-<p class="tableblock">- use an existing AMS workspace for export, or,
-- create a new workspace</p>
-<p class="tableblock">Further, if metrics export is enabled, additional AWS-specific metrics from ECS cluster are exported to AWS CloudWatch:</p>
-<p class="tableblock">- <code>ecs.task.memory.utilized</code>
-- <code>ecs.task.memory.reserved</code>
-- <code>ecs.task.cpu.utilized</code>
-- <code>ecs.task.cpu.reserved</code>
-- <code>ecs.task.network.rate.rx</code>
-- <code>ecs.task.network.rate.tx</code>
-- <code>ecs.task.storage.read_bytes</code>
-- <code>ecs.task.storage.write_bytes</code></p>
-<p class="tableblock">You can find the full list of supported metrics here
-<a href="https://pkg.go.dev/github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver#section-readme" class="bare">https://pkg.go.dev/github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver#section-readme</a></p></td>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>use an existing AMS workspace for export, or,</p>
+</li>
+<li>
+<p>create a new workspace</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Further, if metrics export is enabled, additional AWS-specific metrics from ECS cluster are exported to AWS CloudWatch:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>ecs.task.memory.utilized</code></p>
+</li>
+<li>
+<p><code>ecs.task.memory.reserved</code></p>
+</li>
+<li>
+<p><code>ecs.task.cpu.utilized</code></p>
+</li>
+<li>
+<p><code>ecs.task.cpu.reserved</code></p>
+</li>
+<li>
+<p><code>ecs.task.network.rate.rx</code></p>
+</li>
+<li>
+<p><code>ecs.task.network.rate.tx</code></p>
+</li>
+<li>
+<p><code>ecs.task.storage.read_bytes</code></p>
+</li>
+<li>
+<p><code>ecs.task.storage.write_bytes</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>You can find the full list of supported metrics here
+<a href="https://pkg.go.dev/github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver#section-readme" class="bare">https://pkg.go.dev/github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver#section-readme</a></p>
+</div>
+</div></div></td>
 </tr>
 </tbody>
 </table>
