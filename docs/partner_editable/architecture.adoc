@@ -86,12 +86,26 @@ Jaeger can be deployed in multiple different ways, depending on the networking r
 provides a number of configuration parameters to accomodate different scenarious. The following sections
 provide additional information on different network topologies.
 
-==== Network Load Balancer
-Network load balancer sits in front of ECS services and exposes a number of ports for the clients:
+==== Network Load Balancer visibility
+By default: *internet-facing*
 
 Network Load Balancer can be provisioned as `internet-facing` 
 (with a public IP address) or as `internal` (accessible only from within VPC). 
-Default is `internet-facing`.
+
+Network load balancer sits in front of ECS services and exposes a number of ports for the clients:
+
+|=======
+|Resource |This deployment uses
+|VPCs |<n>
+|Elastic IP addresses |<n>
+|AWS Identity and Access Management (IAM) security groups |<n>
+|IAM roles |<n>
+|Auto Scaling groups |<n>
+|Application Load Balancers |<n>
+|Network Load Balancers |<n>
+|<type> instances |<n>
+|=======
+
 
 NOTE: The load balancer is provisioned in *public* VPC subnets (public here does not necessarily mean 
 that it is publicly accessible) in contrast to the other Jaeger services 
@@ -129,7 +143,7 @@ NOTE: This Quick Start does not set up subdomain delegation (NS records).
 If you requested a new hosted zone for a subdomain, you would need to configure the delegation.
 
 ==== TLS certificates
-Default: *disabled*
+By default: *disabled*
 Prerequisite: Public DNS has to be configured
 
 An optional TLS certificate can be associated with the load balancer to enable encryption in transit for Jaeger clients. This is a highly recommended setup.
@@ -146,10 +160,10 @@ internet-reachable (this may be the case when you requested a new public zone fo
 but DNS delegation is not configured yet).
 
 === Container Insights integration
-TBD
+By default: *disabled*
 
 === Exporting Jaeger metrics
-Default: *disabled*
+By default: *disabled*
 
 Jaeger services expose Prometheus metrics that may be useful to assess the health of the telemetry backend. 
 The Quick Start can be optionally configured to expose these metrics and export them to 
@@ -170,3 +184,6 @@ Further, if metrics export is enabled, additional AWS-specific metrics from ECS 
 - `ecs.task.network.rate.tx`
 - `ecs.task.storage.read_bytes`
 - `ecs.task.storage.write_bytes`
+
+You can find the full list of supported metrics here
+https://pkg.go.dev/github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver#section-readme
