@@ -1,12 +1,25 @@
 // Replace the <n> in each row to specify the number of resources used in this deployment. Remove the rows for resources that aren’t used.
+
+Base resources:
+
+[cols="1,3"]
 |===
-|Resource |This deployment uses
-|VPCs |<n>
-|Elastic IP addresses |<n>
-|AWS Identity and Access Management (IAM) security groups |<n>
-|IAM roles |<n>
-|Auto Scaling groups |<n>
-|Application Load Balancers |<n>
-|Network Load Balancers |<n>
-|<type> instances |<n>
+^| *Resource* ^| *This deployment uses* 
+|VPCs ^| *1*
+|Elastic IP addresses ^| *2* / *3* (depending on the number of AZs)
+|Network Load Balancers ^| *1*
+|ECS clusters ^| *1*
+|OpenSearch clusters ^| *1*
+| IAM roles ^| *8*
+|===
+
+Optional resources:
+
+[cols="1,3"]
+|===
+^| *Resource* ^| *This deployment uses* 
+| Route 53 public hosted zone ^| *1*
+| Route 53 private hosted zone ^| *1*
+| ACM certificate ^| *1*
+| Amazon Managed Service for Prometheus workspace ^| *1*
 |===

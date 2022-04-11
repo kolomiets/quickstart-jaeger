@@ -1558,7 +1558,7 @@ deploy, and operate your infrastructure and applications on the AWS Cloud.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p>This Quick Start assumes familiarity with <a href="https://www.jaegertracing.io/docs/1.32/architecture/">Jaeger architecture</a>
-and high-level understanding of <a href="https://www.jaegertracing.io/docs/1.32/deployment/">deployment opitons</a>.</p>
+and high-level understanding of <a href="https://www.jaegertracing.io/docs/1.32/deployment/">available deployment opitons</a>.</p>
 </div></div></td>
 </tr>
 </tbody>
@@ -1587,47 +1587,73 @@ and high-level understanding of <a href="https://www.jaegertracing.io/docs/1.32/
 <p><em><strong>This portion of the deployment guide is located at <code>docs/partner_editable/service_limits.adoc</code></strong></em></p>
 </div>
 <div class="preview_mode">
+<div class="paragraph">
+<p>Base resources:</p>
+</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
+<col style="width: 25%;">
+<col style="width: 75%;">
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Resource</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">This deployment uses</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>Resource</strong></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>This deployment uses</strong></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">VPCs</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;n&gt;</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>1</strong></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Elastic IP addresses</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;n&gt;</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">AWS Identity and Access Management (IAM) security groups</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;n&gt;</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">IAM roles</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;n&gt;</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Auto Scaling groups</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;n&gt;</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Application Load Balancers</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;n&gt;</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>2</strong> / <strong>3</strong> (depending on the number of AZs)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Network Load Balancers</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;n&gt;</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>1</strong></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;type&gt; instances</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;n&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ECS clusters</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>1</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OpenSearch clusters</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>1</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">IAM roles</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>8</strong></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Optional resources:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>Resource</strong></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>This deployment uses</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Route 53 public hosted zone</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>1</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Route 53 private hosted zone</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>1</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ACM certificate</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>1</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Amazon Managed Service for Prometheus workspace</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>1</strong></p></td>
 </tr>
 </tbody>
 </table>
@@ -1699,25 +1725,7 @@ Certain Regions are available on an opt-in basis. For more information, see <a h
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div id="toc" class="toc">
-<div id="toctitle"></div>
-<ul class="sectlevel3">
-<li><a href="#_prepare_your_aws_account">Prepare your AWS account</a></li>
-<li><a href="#_prepare_your_cloud_native_computing_foundation_account">Prepare your Cloud Native Computing Foundation account</a></li>
-</ul>
-</div>
-<div class="sect3">
-<h4 id="_prepare_your_aws_account">Prepare your AWS account</h4>
-<div class="paragraph">
-<p><em>Describe any setup required in the AWS account prior to template launch</em></p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_prepare_your_cloud_native_computing_foundation_account">Prepare your Cloud Native Computing Foundation account</h4>
-<div class="paragraph">
-<p><em>Describe any setup required in the partner portal/account prior to template launch</em></p>
-</div>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
 </tr>
 </tbody>
 </table>
