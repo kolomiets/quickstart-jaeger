@@ -1,7 +1,3 @@
-ifndef::production_build[]
-:!toc:
-endif::production_build[]
-
 Deploying this Quick Start for a new virtual private cloud (VPC) with
 *default parameters* builds the following _{partner-product-name}_ environment in the
 AWS Cloud.
@@ -99,25 +95,25 @@ Network Load Balancer can be provisioned as `internet-facing`
 Network load balancer sits in front of ECS services and exposes a number of ports for the clients:
 
 [cols="1,1,3"]
-!===
-^! *Port* ^! *Protocol* ^! *Description*
-^.^!*14250*
-^.^! gRPC 
-! accepts spans in https://developers.google.com/protocol-buffers[protobuf] format
-^.^!*14268*
-^.^! HTTP 
-! accepts spans in Thrift format
-.2+^.^!*14269*
-.2+^.^! HTTP 
-! [*in-memory* storage backend]: health check at `/` and Prometheus metrics at `/metrics` for both  https://www.jaegertracing.io/docs/1.32/architecture/#collector[Collector] and https://www.jaegertracing.io/docs/1.32/architecture/#query[Query] services
-! [*elasticsearch* storage backend]: health check at `/` and metrics at `/metrics` for https://www.jaegertracing.io/docs/1.32/architecture/#collector[Collector] service
-^.^!*16687*
-^.^! HTTP 
-! [*elasticsearch* storage backend only]: health check at `/` and Prometheus metrics at `/metrics` for https://www.jaegertracing.io/docs/1.32/architecture/#query[Query] service
-^.^!*80* / *443*
-^.^! HTTP 
-! Jaeger UI at `/` and API endpoints at `/api/*`
-!===
+|===
+^| *Port* ^| *Protocol* ^| *Description*
+^.^|*14250*
+^.^| gRPC 
+| accepts spans in https://developers.google.com/protocol-buffers[protobuf] format
+^.^|*14268*
+^.^| HTTP 
+| accepts spans in Thrift format
+.2+^.^|*14269*
+.2+^.^| HTTP 
+| [*in-memory* storage backend]: health check at `/` and Prometheus metrics at `/metrics` for both  https://www.jaegertracing.io/docs/1.32/architecture/#collector[Collector] and https://www.jaegertracing.io/docs/1.32/architecture/#query[Query] services
+| [*elasticsearch* storage backend]: health check at `/` and metrics at `/metrics` for https://www.jaegertracing.io/docs/1.32/architecture/#collector[Collector] service
+^.^|*16687*
+^.^| HTTP 
+| [*elasticsearch* storage backend only]: health check at `/` and Prometheus metrics at `/metrics` for https://www.jaegertracing.io/docs/1.32/architecture/#query[Query] service
+^.^|*80* / *443*
+^.^| HTTP 
+| Jaeger UI at `/` and API endpoints at `/api/*`
+|===
 
 NOTE: The load balancer is provisioned in *public* VPC subnets (public here does not necessarily mean 
 that it is publicly accessible) in contrast to the other Jaeger services 
