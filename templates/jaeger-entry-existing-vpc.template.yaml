@@ -260,9 +260,9 @@ Parameters:
   EnableContainerInsights:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
-    Default: 'Yes'
+    Default: 'No'
     Description: |
-      Choose "No" to disable integration with CloudWatch Container Insights. 
+      Choose "Yes" to enable integration with CloudWatch Container Insights. 
       Container Insights ensure performance metrics are available in CloudWatch.
   ExportMetrics:
     Type: String
