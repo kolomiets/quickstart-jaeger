@@ -49,7 +49,7 @@ Elasticsearch storage backend is the recommended option for large scale producti
 The Quick Start exposes a number of parameters to provision an Elasticsearch cluster adjusted for your needs - 
 see link:#_parameter_reference[Parameter reference] for additional details. 
 
-With all the optional components disabled, the following components are deployed:
+With all the optional integrations disabled, the following components are deployed:
 
 * https://aws.amazon.com/opensearch-service/[Amazon OpenSearch] cluster 
 * https://aws.amazon.com/fargate/[ECS Fargate] cluster   
@@ -72,7 +72,7 @@ Jaeger deployed with in-memory storage is *not* highly available / resilient. As
 containers, there is only one Jaeger ECS task running at any given moment of time. If the task is terminated, all traces 
 are lost.
 
-This is the simplest Jaeger deployment on AWS this Quick Start provides. With all the optional components disabled,
+This is the simplest Jaeger deployment on AWS this Quick Start provides. With all the optional integrations disabled,
 the following components are deployed:
 
 * ECS Fargate cluster
@@ -82,18 +82,91 @@ the following components are deployed:
 In-memory storage backend is ideal for rapid prototyping, proof of concept work, experimentation, etc. 
 
 === DNS configuration
-TBD
+Jaeger can be deployed in multiple different ways, depending on the networking requirments. This Quick Start
+provides a number of configuration parameters to accomodate different scenarious. The following sections
+provide additional information on different network topologies.
 
-==== Load Balancer visibility
+==== Network Load Balancer
+Network load balancer sits in front of ECS services and exposes a number of ports for the clients:
+
+Network Load Balancer can be provisioned as `internet-facing` 
+(with a public IP address) or as `internal` (accessible only from within VPC). 
+Default is `internet-facing`.
+
+NOTE: The load balancer is provisioned in *public* VPC subnets (public here does not necessarily mean 
+that it is publicly accessible) in contrast to the other Jaeger services 
+(ECS services and tasks, Elasticseatch cluster) that run in *private* VPC subnets.
 
 ==== Public DNS
+By default: *disabled*
+
+An optional public DNS name can be configured for the load balancer - this would make it possible 
+to use a custom domain name, like jaeger.mydoman.com. This Quick Start can create a Roure 53 record
+in a public hosted zone to support this scenario. There are several ways to achieve this:
+
+- use an existing Route 53 public hosted zone - 
+you can provide the hosted zone ID as a parameter for the Quickstart
+- create a new public hosted zone and provision Jaeger DNS record there. 
+
+NOTE: This Quick Start does not set up subdomain delegation (NS records). 
+If you requested a new hosted zone for a subdomain, you would need to configure the delegation.
 
 ==== Private DNS
+By default: *disabled*
+
+An optional private DNS name can be configured for the load balancer and associated with the VPC - 
+this would make it possible to use a custom domain name, like jaeger.mydoman.com from within your VPC. 
+Usually, this makes sense when an internal load balancer is used.
+
+This Quick Start can create a Roure 53 record in a private hosted zone to support this scenario. 
+There are several ways to achieve this:
+
+- use an existing Route 53 private hosted zone - 
+you can provide the hosted zone ID as a parameter for the Quickstart
+- create a new private hosted zone and provision Jaeger DNS record there. 
+
+NOTE: This Quick Start does not set up subdomain delegation (NS records). 
+If you requested a new hosted zone for a subdomain, you would need to configure the delegation.
 
 ==== TLS certificates
+Default: *disabled*
+Prerequisite: Public DNS has to be configured
+
+An optional TLS certificate can be associated with the load balancer to enable encryption in transit for Jaeger clients. This is a highly recommended setup.
+
+The Quick Start provides multiple options to enable the encryption:
+
+- use an existing ACM certificate - you can provide an ARN for the certificate as a parameter for the Quick Start
+- create new ACM certificate and associate it with the load balancer. 
+
+NOTE: If a new certificate is requested, the Quick Start performs DNS validation,
+i.e. validation of DNS CNAME record created in a public hosted zone. If ACM can't validate the record,
+the Quick Start deployment will eventually fail. Keep this in mind if your hosted zone is not 
+internet-reachable (this may be the case when you requested a new public zone for a subdomain 
+but DNS delegation is not configured yet).
 
 === Container Insights integration
 TBD
 
 === Exporting Jaeger metrics
-TBD
+Default: *disabled*
+
+Jaeger services expose Prometheus metrics that may be useful to assess the health of the telemetry backend. 
+The Quick Start can be optionally configured to expose these metrics and export them to 
+https://aws.amazon.com/prometheus/[Amazon Managed Service for Prometheus] (AMS). 
+This is achieved by deploying an ECS Service with ADOT collector that scrapes the metrics from 
+Jaeger services and pushes them to AMS. You can configure the QuickStart to:
+
+- use an existing AMS workspace for export, or,
+- create a new workspace
+
+Further, if metrics export is enabled, additional AWS-specific metrics from ECS cluster are exported to AWS CloudWatch:
+
+- `ecs.task.memory.utilized`
+- `ecs.task.memory.reserved`
+- `ecs.task.cpu.utilized`
+- `ecs.task.cpu.reserved`
+- `ecs.task.network.rate.rx`
+- `ecs.task.network.rate.tx`
+- `ecs.task.storage.read_bytes`
+- `ecs.task.storage.write_bytes`
