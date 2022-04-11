@@ -98,17 +98,8 @@ Network load balancer sits in front of ECS services and exposes a number of port
 ^.^|*14268*
 ^.^| HTTP 
 | accepts spans in Thrift format
-.2+^.^|*14269*
-.2+^.^| HTTP 
-| [*in-memory* storage backend]: health check at `/` and Prometheus metrics at `/metrics` for both  https://www.jaegertracing.io/docs/1.32/architecture/#collector[Collector] and https://www.jaegertracing.io/docs/1.32/architecture/#query[Query] services
-| [*elasticsearch* storage backend]: health check at `/` and metrics at `/metrics` for https://www.jaegertracing.io/docs/1.32/architecture/#collector[Collector] service
-^.^|*16687*
-^.^| HTTP 
-| [*elasticsearch* storage backend only]: health check at `/` and Prometheus metrics at `/metrics` for https://www.jaegertracing.io/docs/1.32/architecture/#query[Query] service
-^.^|*80* / *443*
-^.^| HTTP 
-|  Jaeger UI at `/` and API endpoints at `/api/*` 
 |===
+
 
 Network Load Balancer can be provisioned as `internet-facing` (with a public IP address) or as `internal` (accessible only from within VPC). Default is `internet-facing`.
 
