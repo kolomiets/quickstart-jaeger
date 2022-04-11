@@ -89,20 +89,9 @@ provide additional information on different network topologies.
 ==== Network Load Balancer
 Network load balancer sits in front of ECS services and exposes a number of ports for the clients:
 
-
-|===
-|Resource |This deployment uses
-|VPCs |<n>
-|Elastic IP addresses |<n>
-|AWS Identity and Access Management (IAM) security groups |<n>
-|IAM roles |<n>
-|Auto Scaling groups |<n>
-|Application Load Balancers |<n>
-|Network Load Balancers |<n>
-|<type> instances |<n>
-|===
-
-Network Load Balancer can be provisioned as `internet-facing` (with a public IP address) or as `internal` (accessible only from within VPC). Default is `internet-facing`.
+Network Load Balancer can be provisioned as `internet-facing` 
+(with a public IP address) or as `internal` (accessible only from within VPC). 
+Default is `internet-facing`.
 
 NOTE: The load balancer is provisioned in *public* VPC subnets (public here does not necessarily mean 
 that it is publicly accessible) in contrast to the other Jaeger services 
