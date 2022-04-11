@@ -52,7 +52,7 @@ Any value accepted by [date-math](https://www.elastic.co/guide/en/elasticsearch/
 [width="100%",cols="16%,11%,73%",options="header",]
 |===
 |Parameter label (name) |Default value|Description|Enable Amazon CloudWatch Container Inrights
-(`EnableContainerInsights`)|`Yes`|Choose "No" to disable integration with CloudWatch Container Insights. 
+(`EnableContainerInsights`)|`No`|Choose "Yes" to enable integration with CloudWatch Container Insights. 
 Container Insights ensure performance metrics are available in CloudWatch.
 |Export Jaeger metrics
 (`ExportMetrics`)|`No`|Choose "Yes" to export Jaeger and ECS cluster metrics to Amazon Managed Service for Prometheus.|Metrics scrape interval
