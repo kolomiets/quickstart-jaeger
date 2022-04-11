@@ -828,7 +828,14 @@ p.footer-text a{color:#d7d8d8}
 <li><a href="#_jaeger_on_aws">Jaeger on AWS</a></li>
 <li><a href="#_aws_costs">AWS costs</a></li>
 <li><a href="#_software_licenses">Software licenses</a></li>
-<li><a href="#_architecture">Architecture</a></li>
+<li><a href="#_architecture">Architecture</a>
+<ul class="sectlevel2">
+<li><a href="#_storage_backend">Storage Backend</a></li>
+<li><a href="#_dns_configuration">DNS configuration</a></li>
+<li><a href="#_container_insights_integration">Container Insights integration</a></li>
+<li><a href="#_exporting_jaeger_metrics">Exporting Jaeger metrics</a></li>
+</ul>
+</li>
 <li><a href="#_planning_the_deployment">Planning the deployment</a>
 <ul class="sectlevel2">
 <li><a href="#_specialized_knowledge">Specialized knowledge</a></li>
@@ -1011,13 +1018,8 @@ Amazon may share user-deployment information with the AWS Partner that collabora
 <div class="paragraph">
 <p><em><strong>This portion of the deployment guide is located at <code>docs/partner_editable/product_description.adoc</code></strong></em></p>
 </div>
-<table class="tableblock frame-all grid-all stretch preview_mode">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<div class="preview_mode">
+<div class="paragraph">
 <p>This Quick Start integrates Jaeger with the following AWS services:</p>
 </div>
 <div class="ulist">
@@ -1055,10 +1057,8 @@ the Quick Start uses the following AWS services:</p>
 <p><a href="https://aws.amazon.com/keyspaces/">Amazon Keyspaces (for Apache Cassandra)</a> - a scalable, highly available, and managed Apache Cassandra–compatible database service</p>
 </li>
 </ul>
-</div></div></td>
-</tr>
-</tbody>
-</table>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1094,18 +1094,11 @@ After you deploy the Quick Start, create <a href="https://docs.aws.amazon.com/aw
 <div class="paragraph">
 <p><em><strong>This portion of the deployment guide is located at <code>docs/partner_editable/licenses.adoc</code></strong></em></p>
 </div>
-<table class="tableblock frame-all grid-all stretch preview_mode">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<div class="preview_mode">
+<div class="paragraph">
 <p>Jaeger uses <a href="https://github.com/jaegertracing/jaeger/blob/main/LICENSE">Apache 2.0 License</a>.</p>
-</div></div></td>
-</tr>
-</tbody>
-</table>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1114,21 +1107,7 @@ After you deploy the Quick Start, create <a href="https://docs.aws.amazon.com/aw
 <div class="paragraph">
 <p><em><strong>This portion of the deployment guide is located at <code>docs/partner_editable/architecture.adoc</code></strong></em></p>
 </div>
-<table class="tableblock frame-all grid-all stretch preview_mode">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div id="toc" class="toc">
-<div id="toctitle"></div>
-<ul class="sectlevel2">
-<li><a href="#_storage_backend">Storage Backend</a></li>
-<li><a href="#_dns_configuration">DNS configuration</a></li>
-<li><a href="#_container_insights_integration">Container Insights integration</a></li>
-<li><a href="#_exporting_jaeger_metrics">Exporting Jaeger metrics</a></li>
-</ul>
-</div>
+<div class="preview_mode">
 <div class="paragraph">
 <p>Deploying this Quick Start for a new virtual private cloud (VPC) with
 <strong>default parameters</strong> builds the following <em>Jaeger</em> environment in the
@@ -1532,10 +1511,8 @@ Jaeger services and pushes them to AMS. You can configure the QuickStart to:</p>
 <p>You can find the full list of supported metrics here
 <a href="https://pkg.go.dev/github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver#section-readme" class="bare">https://pkg.go.dev/github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver#section-readme</a></p>
 </div>
-</div></div></td>
-</tr>
-</tbody>
-</table>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1590,7 +1567,7 @@ and high-level understanding of <a href="https://www.jaegertracing.io/docs/1.32/
 </div>
 <div class="preview_mode">
 <div class="paragraph">
-<p>Base resources:</p>
+<p>Baseline resources:</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>

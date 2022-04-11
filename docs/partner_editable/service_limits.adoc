@@ -1,15 +1,15 @@
 // Replace the <n> in each row to specify the number of resources used in this deployment. Remove the rows for resources that aren’t used.
 
-Base resources:
+Baseline resources:
 
 [cols="1,3"]
 |===
 ^| *Resource* ^| *This deployment uses* 
-|VPCs ^| *1*
-|Elastic IP addresses ^| *2* / *3* (depending on the number of AZs)
-|Network Load Balancers ^| *1*
-|ECS clusters ^| *1*
-|OpenSearch clusters ^| *1*
+| VPCs ^| *1*
+| Elastic IP addresses ^| *2* / *3* (depending on the number of AZs)
+| Network Load Balancers ^| *1*
+| ECS clusters ^| *1*
+| OpenSearch clusters ^| *1*
 | IAM roles ^| *8*
 |===
 
