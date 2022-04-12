@@ -123,7 +123,7 @@ Resources:
   Cluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: jaeger-cluster
+      ClusterName: !Sub jaeger-cluster-${EnvironmentName}
       ClusterSettings:
         - Name: containerInsights
           Value: !If [EnableContainerInsights, enabled, disabled]

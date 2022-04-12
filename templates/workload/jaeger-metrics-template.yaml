@@ -35,7 +35,7 @@ Resources:
   APSWorkspace:
     Type: AWS::APS::Workspace
     Properties:
-      Alias: !Sub jaeger-${EnvironmentName}-workspace
+      Alias: !Sub jaeger-metrics-${EnvironmentName}
 
   ConfigurationParameter:
     Type: AWS::SSM::Parameter
