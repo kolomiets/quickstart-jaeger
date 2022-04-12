@@ -23,5 +23,5 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifactErrorsFailBuild: true
-          artifacts: quickstart-jaeger-${{ GITHUB_REF_NAME }}.zip
+          artifacts: quickstart-jaeger-v*.zip
           token: ${{ secrets.GITHUB_TOKEN }}
