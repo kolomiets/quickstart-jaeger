@@ -224,7 +224,7 @@ Resources:
   SearchDomain:
     Type: AWS::OpenSearchService::Domain
     Properties:
-      DomainName: jaeger-traces
+      DomainName: !Sub jaeger-traces-${EnvironmentName}
       EngineVersion: !Ref ESEngineVersion
       ClusterConfig:
         DedicatedMasterEnabled: false
