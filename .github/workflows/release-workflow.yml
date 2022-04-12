@@ -12,12 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with: 
+          submodules: 'recursive'
       - name: Package templates
         run: |
           ./scripts/package-release.sh quickstart-jaeger-${{ github.ref }}
           zip -r quickstart-jaeger-${{ github.ref }}.zip quickstart-jaeger-${{ github.ref }}
-      - uses: ncipollo/release-action@v1
+      - name: Create GitHub release
+        uses: ncipollo/release-action@v1
         with:
+          name: quickstart-jaeger-templates-${{ github.ref }}
+          allowUpdates: true
+          artifactErrorsFailBuild: true
           artifacts: quickstart-jaeger-${{ github.ref }}.zip
           token: ${{ secrets.GITHUB_TOKEN }}
