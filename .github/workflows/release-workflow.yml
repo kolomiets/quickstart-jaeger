@@ -14,8 +14,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Package templates
-        run: ./scripts/package-release.sh
+        run: |
+          ./scripts/package-release.sh quickstart-jaeger-${{ github.ref }}
+          zip -r quickstart-jaeger-${{ github.ref }}.zip quickstart-jaeger-${{ github.ref }}
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/*"
+          artifacts: quickstart-jaeger-${{ github.ref }}.zip
           token: ${{ secrets.GITHUB_TOKEN }}

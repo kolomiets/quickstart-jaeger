@@ -1,8 +1,9 @@
+RELEASE_NAME="$1"
+
 # create release folder
-mkdir -p build
-rm -r build/*
+mkdir -p $RELEASE_NAME
 
 # copy Jaeger CFN templates 
-cp -R templates build
+cp -R templates $RELEASE_NAME
 # copy CFN templates from submodules, keep folder structure
-find submodules/*/templates -name '*.*' | cpio -pdm build
+find submodules/*/templates -name '*.*' | cpio -pdm $RELEASE_NAME
