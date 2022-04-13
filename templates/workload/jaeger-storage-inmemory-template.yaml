@@ -46,50 +46,60 @@ Resources:
   TargetGroup14250:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Name: jaeger-14250
       Port: 14250
       Protocol: TCP
       TargetType: ip
       VpcId: !Ref VPCID
+      Tags:
+        - Key: Name
+          Value: !Sub jaeger-14250-${EnvironmentName}
 
   TargetGroup14268:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Name: jaeger-14268
       Port: 14268
       Protocol: TCP
       TargetType: ip
       VpcId: !Ref VPCID
+      Tags:
+        - Key: Name
+          Value: !Sub jaeger-14268-${EnvironmentName}
 
   TargetGroup14269:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Condition: ExportMetrics
     Properties:
-      Name: jaeger-14269
       Port: 14269
       Protocol: TCP
       TargetType: ip
       VpcId: !Ref VPCID
+      Tags:
+        - Key: Name
+          Value: !Sub jaeger-14269-${EnvironmentName}
 
   TargetGroupHttp:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Condition: NoCertificateProvided
     Properties:
-      Name: jaeger-http
       Port: 80
       Protocol: TCP
       TargetType: ip
       VpcId: !Ref VPCID
+      Tags:
+        - Key: Name
+          Value: !Sub jaeger-http-${EnvironmentName}
 
   TargetGroupHttps:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Condition: CertificateProvided
     Properties:
-      Name: jaeger-https
       Port: 443
       Protocol: TCP
       TargetType: ip
       VpcId: !Ref VPCID
+      Tags:
+        - Key: Name
+          Value: !Sub jaeger-https-${EnvironmentName}
 
 # Listeners
   Listener14250:
