@@ -2,6 +2,16 @@
 
 ![Jaeger Logo](docs/images/jaeger-horizontal-color.png)
 
+## Table of contents
+
+   * [Overview](#overview)
+   * [Documentation](#documentation)
+   * [Contribution](#contribution)
+   * [Deployment](#deployment)
+   * [Running tests](#running-tests)
+
+## Overview
+
 This Quick Start helps you to deploy a Highly Available Jaeger - open source, end-to-end distributed tracing backend on the Amazon Web Services (AWS) Cloud.
 
 You can use the AWS CloudFormation templates included with the Quick Start to deploy Jaeger
@@ -40,18 +50,17 @@ the procedure outlined below:
    ![S3 bucket for deployment](docs/images/deployment/1-s3-bucket.png)
  - Get object URL for either `jaeger-entry-new-vpc.template.yaml` or `jaeger-entry-existing-vpc.template.yaml` entry template from `templates` folder
    ![CloudFormation templates objet URL](docs/images/deployment/2-object-url.png)
- - Go to [AWS CloudFormation console](https://console.aws.amazon.com/cloudformation/) - select the region you want to deploy the Quick Start to and click `Create Stack` -> `With new resources`
- - Use object URL for the entry template as `Amazon S3 URL`, click `Next`
+ - Go to [AWS CloudFormation console](https://console.aws.amazon.com/cloudformation/) - select the region you want to deploy the Quick Start to and click **Create Stack** -> **With new resources**
+ - Use object URL for the entry template as **Amazon S3 URL**, click **Next**
    ![Create CloudFormation stack](docs/images/deployment/3-create-stack.png)
- - Specify the stack name and adjust the parameters as needed. Make sure that **AWS Quick Start configuration** parameters correctly reflect information about your S3 bucket. Click `Next` when ready
+ - On the **Specify stack details** page, change the stack name if needed. Review the parameters for the template, and provide values for any parameters that require input. For all other parameters, review the default settings, and customize them as necessary. Make sure that **AWS Quick Start configuration** parameters correctly reflect information about your S3 bucket. Click **Next** when ready
    ![Quick Start bucket parameters](docs/images/deployment/4-bucket-parameters.png)
- - Review stack options on **Configure stack options** page, click `Next`
- - On the **Review** page, scroll to the bottom and ensure that the following options are enabled (needed as the Quick Start creates IAM resources):
-   - **I acknowledge that AWS CloudFormation might create IAM resources with custom names**
-   - **I acknowledge that AWS CloudFormation might require the following capability: CAPABILITY_AUTO_EXPAND**
- - Click `Create stack`
+ - On the **Configure stack options** page, you can [specify tags](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html) for resources in your stack and [set advanced options](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-add-tags.html). When you’re done, choose **Next**.
+ - On the **Review** page, review and confirm the template settings. Under **Capabilities**, select the two check boxes to acknowledge that the template creates IAM resources and might require the ability to automatically expand macros.
+
+ - Choose **Create stack** to deploy the stack.
  - Wait until the stack is in `CREATE_COMPLETE` state
- - Click on the stack and navigate to the `Outputs` tab. Click `JaegerURL` output values to open Jaeger web interface.
+ - Click on the stack and navigate to the **Outputs** tab. Click **JaegerURL** output values to open Jaeger web interface.
    ![CloudFormation stack outputs](docs/images/deployment/5-jaeger-url.png)
 ## Running tests
 
