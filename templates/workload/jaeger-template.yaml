@@ -245,3 +245,7 @@ Resources:
         ScrapeIntervalSeconds: !Ref ScrapeIntervalSeconds
         ScrapeTimeoutSeconds: !Ref ScrapeTimeoutSeconds
         ClusterMetricsCollectionInterval: !Ref ClusterMetricsCollectionInterval
+
+Outputs:
+  JaegerURL:
+    Value: !GetAtt LoadBalancer.DNSName
