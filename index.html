@@ -1742,54 +1742,46 @@ Certain Regions are available on an opt-in basis. For more information, see <a h
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Choose one of the following options to launch the AWS CloudFormation template into your AWS account. For help with choosing an option, see <a href="#_deployment_options">Deployment options</a>, earlier in this guide.</p>
-</li>
-</ol>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 100%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://fwd.aws/6dEQ7" target="_blank" rel="noopener">Deploy Jaeger into a new VPC</a></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://fwd.aws/e37MA" target="_blank" rel="noopener">Deploy Jaeger into an existing VPC</a></p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>Deployment can take between 15 minutes to 1 hour to complete, depending on the chosen deployment option and parameter values.</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic" start="3">
-<li>
-<p>Check the Region that’s displayed in the upper-right corner of the navigation bar, and change it if necessary. This is where the infrastructure for Jaeger is built. The template launches in the US East (Ohio) Region by default.</p>
+<p>Choose one of the available options to launch the AWS CloudFormation template into your AWS account. For help with choosing an option, see <a href="#_deployment_options">Deployment options</a>, earlier in this guide.</p>
 </li>
 <li>
-<p>On the <strong>Select template</strong> page, keep the default setting for the template URL, and then choose <strong>Next</strong>.</p>
+<p>Download Jaeger Quick Start CloudFormation templates from <a href="https://github.com/kolomiets/quickstart-jaeger/releases">Releases page</a></p>
 </li>
 <li>
-<p>On the <strong>Specify stack details</strong> page, change the stack name if needed. Review the parameters for the template, and provide values for any parameters that require input. For all other parameters, review the default settings, and customize them as necessary.</p>
+<p>Upload the templates <em>preserving folder structure</em> to S3 bucket in your AWS account</p>
+<div class="imageblock">
+<div class="content">
+<img src="images/deployment/1-s3-bucket.png" alt="S3 bucket for deployment">
+</div>
+</div>
 </li>
-</ol>
+<li>
+<p>Get object URL for either <code>jaeger-entry-new-vpc.template.yaml</code> or <code>jaeger-entry-existing-vpc.template.yaml</code> entry template from <code>templates</code> folder</p>
+<div class="imageblock">
+<div class="content">
+<img src="images/deployment/2-object-url.png" alt="CloudFormation templates object URL">
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Unless you are customizing this Quick Start&#8217;s templates for your own deployment projects, we recommend that you keep the default settings for the parameters labeled <code>Quick Start S3 bucket name</code>, <code>Quick Start S3 bucket
-Region</code>, and <code>Quick Start S3 key prefix</code>. Changing these parameter settings automatically updates code references to point to a new Quick Start location. For more information, see the <a href="https://aws-quickstart.github.io/option1.html" target="_blank" rel="noopener">AWS Quick Start Contributor’s Guide</a>.
-</td>
-</tr>
-</table>
 </div>
-<div class="olist arabic">
-<ol class="arabic" start="6">
+</li>
+<li>
+<p>Go to [AWS CloudFormation console](<a href="https://console.aws.amazon.com/cloudformation/" class="bare">https://console.aws.amazon.com/cloudformation/</a>) - select the region you want to deploy the Quick Start to and click <code>Create Stack</code> &#8594; <code>With new resources</code></p>
+</li>
+<li>
+<p>Use object URL for the entry template as <code>Amazon S3 URL</code>, click <strong>Next</strong></p>
+<div class="imageblock">
+<div class="content">
+<img src="images/deployment/3-create-stack.png" alt="Create CloudFormation stack">
+</div>
+</div>
+</li>
+<li>
+<p>On the <strong>Specify stack details</strong> page, change the stack name if needed. Review the parameters for the template, and provide values for any parameters that require input. For all other parameters, review the default settings, and customize them as necessary. Make sure that <strong>AWS Quick Start configuration</strong> parameters correctly reflect information about your S3 bucket. Click <strong>Next</strong> when ready</p>
+<div class="imageblock">
+<div class="content">
+<img src="images/deployment/4-bucket-parameters.png" alt="Quick Start bucket parameters">
+</div>
+</div>
+</li>
 <li>
 <p>On the <strong>Configure stack options</strong> page, you can <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-resource-tags.html" target="_blank" rel="noopener">specify tags</a> (key-value pairs) for resources in your stack and <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-add-tags.html" target="_blank" rel="noopener">set advanced options</a>. When you’re done, choose <strong>Next</strong>.</p>
 </li>
@@ -1803,13 +1795,13 @@ Region</code>, and <code>Quick Start S3 key prefix</code>. Changing these parame
 <p>Monitor the status of the stack. When the status is <strong>CREATE_COMPLETE</strong>, the Jaeger deployment is ready.</p>
 </li>
 <li>
-<p>Use the values displayed in the <strong>Outputs</strong> tab for the stack, as shown in <a href="#cfn_outputs">Figure 4</a>, to view the created resources.</p>
+<p>Use the values displayed in the <strong>Outputs</strong> tab for the stack, as shown in <a href="#cfn_outputs">Figure 4</a>, to view the created resources. Click <strong>JaegerURL</strong> output value to open Jaeger web interface.</p>
 </li>
 </ol>
 </div>
 <div id="cfn_outputs" class="imageblock">
 <div class="content">
-<a class="image" href="images/cfn_outputs.png"><img src="images/cfn_outputs.png" alt="cfn_outputs" width="648" height="439"></a>
+<img src="images/deployment/5-jaeger-url.png" alt="CloudFormation outputs">
 </div>
 <div class="title">Figure 4. Jaeger outputs after successful deployment</div>
 </div>
