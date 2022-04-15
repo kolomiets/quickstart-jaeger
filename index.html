@@ -830,6 +830,7 @@ p.footer-text a{color:#d7d8d8}
 <li><a href="#_software_licenses">Software licenses</a></li>
 <li><a href="#_architecture">Architecture</a>
 <ul class="sectlevel2">
+<li><a href="#_networking">Networking</a></li>
 <li><a href="#_storage_backend">Storage Backend</a></li>
 <li><a href="#_dns_configuration">DNS configuration</a></li>
 <li><a href="#_container_insights_integration">Container Insights integration</a></li>
@@ -976,15 +977,15 @@ distributed tracing backend on the Amazon Web Services (AWS) Cloud.</p>
 </div>
 <div class="paragraph">
 <p>You can use the AWS CloudFormation templates included with the Quick Start to deploy Jaeger
-in your AWS account in about 10-30 minutes. The Quick Start automates the following:</p>
+in your AWS account in about 10-30 minutes. The Quick Start automates the following (see <a href="#_deployment_options">Deployment options</a>):</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Deploying Jaeger into a new VPC</p>
+<p><strong>Deploying Jaeger into a new VPC</strong></p>
 </li>
 <li>
-<p>Deploying Jaeger into an existing VPC</p>
+<p><strong>Deploying Jaeger into an existing VPC</strong></p>
 </li>
 </ul>
 </div>
@@ -1108,54 +1109,27 @@ After you deploy the Quick Start, create <a href="https://docs.aws.amazon.com/aw
 <p><em><strong>This portion of the deployment guide is located at <code>docs/partner_editable/architecture.adoc</code></strong></em></p>
 </div>
 <div class="preview_mode">
+<div class="sect2">
+<h3 id="_networking">Networking</h3>
 <div class="paragraph">
-<p>Deploying this Quick Start for a new virtual private cloud (VPC) with
-<strong>default parameters</strong> builds the following <em>Jaeger</em> environment in the
-AWS Cloud.</p>
+<p>This Quick Start deploys a highly available architecture that spans two or more
+Availability Zones. A VPC is configured with public and private subnets, according
+to AWS bets practices, to provide you with your own virtual network on AWS.</p>
 </div>
-<div id="img-aws-architecture" class="imageblock">
-<div class="content">
-<img src="images/architecture_diagram.png" alt="Quick Start architecture for _Jaeger_ on AWS">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This Quick Start relies on <a href="https://github.com/aws-quickstart/quickstart-aws-vpc">quickstart-aws-vpc</a>
+to provides a networking foundation for Jaeger infrastructure on AWS. Refer to this
+project for additional details on VPC design.
+</td>
+</tr>
+</table>
 </div>
-<div class="title">Figure 1. Quick Start architecture for <em>Jaeger</em> on AWS</div>
-</div>
-<div class="paragraph">
-<p>As shown in Figure 1, the Quick Start sets up the following:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A highly available architecture that spans two Availability Zones.*</p>
-</li>
-<li>
-<p>A VPC configured with public and private subnets, according to AWS
-best practices, to provide you with your own virtual network on AWS.*</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>In the public subnets:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Managed network address translation (NAT) gateways to allow outbound
-internet access for resources in the private subnets.*</p>
-</li>
-<li>
-<p>A Linux bastion host in an Auto Scaling group to allow inbound Secure
-Shell (SSH) access to EC2 instances in public and private subnets.*</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>In the private subnets:
-* &lt;describe any additional components&gt;.</p>
-</div>
-<div class="paragraph">
-<p>*The template that deploys the Quick Start into an existing VPC skips
-the components marked by asterisks and prompts you for your existing VPC
-configuration.</p>
 </div>
 <div class="sect2">
 <h3 id="_storage_backend">Storage Backend</h3>
@@ -1184,7 +1158,7 @@ depending on the storage type selected.</p>
 <div class="content">
 <img src="images/architecture_elasticsearch_diagram.png" alt="Quick Start architecture for _Jaeger_ on AWS with Elasticsearch backend">
 </div>
-<div class="title">Figure 2. Quick Start architecture for <em>Jaeger</em> on AWS with Elasticsearch backend</div>
+<div class="title">Figure 1. Quick Start architecture for <em>Jaeger</em> on AWS with Elasticsearch backend</div>
 </div>
 <div class="paragraph">
 <p>Elasticsearch storage backend is the recommended option for large scale production Jaeger deployments.
@@ -1227,7 +1201,7 @@ Jaeger documentation</a> for additional details on this job.</p>
 <div class="content">
 <img src="images/architecture_memory_diagram.png" alt="Quick Start architecture for _Jaeger_ on AWS with In-memory backend">
 </div>
-<div class="title">Figure 3. Quick Start architecture for <em>Jaeger</em> on AWS with In-memory backend</div>
+<div class="title">Figure 2. Quick Start architecture for <em>Jaeger</em> on AWS with In-memory backend</div>
 </div>
 <div class="paragraph">
 <p>Jaeger deployed with in-memory storage is <strong>not</strong> highly available / resilient. As in-memory storage can&#8217;t be shared between
