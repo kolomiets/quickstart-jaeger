@@ -6,41 +6,33 @@ project:
     QSS3BucketName: $[taskcat_autobucket]
     QSS3BucketRegion: us-east-1
     QSS3KeyPrefix: quickstart-jaeger/
-  s3_bucket: tcat-quickstart-jaeger-e44i37mw
+  s3_bucket: ''
 
 tests:
 
-  # inmemory-in-2-az-with-defaults:
-  #   parameters:
-  #     AvailabilityZones: $[taskcat_genaz_2]
-  #     NumberOfAZs: 2
-  #   regions:
-  #   - eu-west-1
+  inmemory-2-az-with-defaults:
+    parameters:
+      AvailabilityZones: $[taskcat_genaz_2]
+      NumberOfAZs: 2
+    regions:
+    - eu-west-1
 
-  # inmemory-in-2-az-with-optional-settings:
-  #   parameters:
-  #     AvailabilityZones: $[taskcat_genaz_2]
-  #     NumberOfAZs: 2
-  #     DomainName: annakolomiets.com
-  #     PublicDNS: UseExisting
-  #     PublicHostedZoneId: Z3P6BQGXXBOMGS
-  #     PrivateDNS: CreateNew
-  #     Certificate: CreateNew
-  #     ExportMetrics: 'Yes'
-  #   regions:
-  #   - eu-west-1
+  inmemory-2-az-with-optional-settings:
+    parameters:
+      AvailabilityZones: $[taskcat_genaz_2]
+      NumberOfAZs: 2
+      StorageBackend: InMemory
+      DomainName: jaeger.com
+      PrivateDNS: CreateNew
+      ExportMetrics: 'Yes'
+      EnableContainerInsights: 'Yes'
+    regions:
+    - us-east-1
 
-  elasticsearch-in-2-az-with-defaults:
+  elasticsearch-2-az-with-defaults:
     parameters:
       AvailabilityZones: $[taskcat_genaz_2]
       NumberOfAZs: 2
       StorageBackend: Elasticseach
     regions:
     - eu-west-1
-
-  # deploy-in-3-az-with-defaults:
-  #   parameters:
-  #     AvailabilityZones: $[taskcat_genaz_3]
-  #     NumberOfAZs: 3
-  #   regions:
-  #   - us-east-1
