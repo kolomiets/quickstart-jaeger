@@ -51,7 +51,8 @@ the procedure outlined below:
    - **I acknowledge that AWS CloudFormation might require the following capability: CAPABILITY_AUTO_EXPAND**
  - Click `Create stack`
  - Wait until the stack is in `CREATE_COMPLETE` state
- - Click on the stack and navigate to the `Outputs` tab. Use `JaegerURL` output to get DNS name of the load balancer.
+ - Click on the stack and navigate to the `Outputs` tab. Click `JaegerURL` output values to open Jaeger web interface.
+   ![CloudFormation stack outputs](docs/images/deployment/5-jaeger-url.png)
 ## Running tests
 
 AWS Quick Starts rely on [TaskCat](https://github.com/aws-ia/taskcat) to validate the CloudFormation templates

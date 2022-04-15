@@ -111,12 +111,15 @@ Parameters:
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
-  EnableContainerInsights: !Equals [!Ref EnableContainerInsights, 'Yes']
   InternalLoadBalancer: !Equals [!Ref InternalLoadBalancer, 'Yes']
   ExportMetrics: !Equals [!Ref ExportMetrics, 'Yes']
+  EnableContainerInsights: !Equals [!Ref EnableContainerInsights, 'Yes']
 
   InMemoryStorage: !Equals [!Ref StorageBackend, 'InMemory']
   ElasticseachStorage: !Equals [!Ref StorageBackend, 'Elasticseach']
+
+  HttpsProtocol: !Not [!Equals [!Ref Certificate, 'Disabled']]
+  CustomDomainName: !Not [!Equals [!Ref PublicDNS, 'Disabled']]
 
 Resources:
 
@@ -248,4 +251,7 @@ Resources:
 
 Outputs:
   JaegerURL:
-    Value: !GetAtt LoadBalancer.DNSName
+    Value: !Sub 
+      - '${Protocol}://${JaegerDomainName}'
+      - Protocol: !If [HttpsProtocol, https, http]
+        JaegerDomainName: !If [CustomDomainName, !Sub '${SubdomainName}.${DomainName}', !GetAtt LoadBalancer.DNSName]
