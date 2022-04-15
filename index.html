@@ -846,7 +846,7 @@ p.footer-text a{color:#d7d8d8}
 <li><a href="#_deployment_steps">Deployment steps</a>
 <ul class="sectlevel2">
 <li><a href="#_sign_in_to_your_aws_account">Sign in to your AWS account</a></li>
-<li><a href="#_launch_the_quick_start">Launch the Quick Start</a></li>
+<li><a href="#_launch_the_quick_start_while_in_developer_preview">Launch the Quick Start (while in Developer Preview)</a></li>
 </ul>
 </li>
 <li><a href="#_best_practices_for_using_jaeger_on_aws">Best practices for using Jaeger on AWS</a></li>
@@ -1738,7 +1738,7 @@ Certain Regions are available on an opt-in basis. For more information, see <a h
 </div>
 </div>
 <div class="sect2">
-<h3 id="_launch_the_quick_start">Launch the Quick Start</h3>
+<h3 id="_launch_the_quick_start_while_in_developer_preview">Launch the Quick Start (while in Developer Preview)</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -1764,10 +1764,10 @@ Certain Regions are available on an opt-in basis. For more information, see <a h
 </div>
 </li>
 <li>
-<p>Go to [AWS CloudFormation console](<a href="https://console.aws.amazon.com/cloudformation/" class="bare">https://console.aws.amazon.com/cloudformation/</a>) - select the region you want to deploy the Quick Start to and click <code>Create Stack</code> &#8594; <code>With new resources</code></p>
+<p>Go to <a href="https://console.aws.amazon.com/cloudformation/">AWS CloudFormation console</a> - select the region you want to deploy the Quick Start to and click <strong>Create Stack</strong> &#8594; <strong>With new resources</strong></p>
 </li>
 <li>
-<p>Use object URL for the entry template as <code>Amazon S3 URL</code>, click <strong>Next</strong></p>
+<p>Use object URL for the entry template as <strong>Amazon S3 URL</strong>, click <strong>Next</strong></p>
 <div class="imageblock">
 <div class="content">
 <img src="images/deployment/3-create-stack.png" alt="Create CloudFormation stack">
@@ -1795,15 +1795,14 @@ Certain Regions are available on an opt-in basis. For more information, see <a h
 <p>Monitor the status of the stack. When the status is <strong>CREATE_COMPLETE</strong>, the Jaeger deployment is ready.</p>
 </li>
 <li>
-<p>Use the values displayed in the <strong>Outputs</strong> tab for the stack, as shown in <a href="#cfn_outputs">Figure 4</a>, to view the created resources. Click <strong>JaegerURL</strong> output value to open Jaeger web interface.</p>
-</li>
-</ol>
-</div>
-<div id="cfn_outputs" class="imageblock">
+<p>Use the values displayed in the <strong>Outputs</strong> tab for the stack, as shown below, to view the created resources. Click <strong>JaegerURL</strong> output value to open Jaeger web interface.</p>
+<div class="imageblock">
 <div class="content">
 <img src="images/deployment/5-jaeger-url.png" alt="CloudFormation outputs">
 </div>
-<div class="title">Figure 4. Jaeger outputs after successful deployment</div>
+</div>
+</li>
+</ol>
 </div>
 </div>
 <div class="paragraph">
