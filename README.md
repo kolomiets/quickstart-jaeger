@@ -37,22 +37,21 @@ the procedure outlined below:
 
  - Download Jaeger Quick Start CloudFormation templates from [Releases page](https://github.com/kolomiets/quickstart-jaeger/releases)
  - Upload the templates *preserving folder structure* to S3 bucket in your AWS account
-<add image here>
- - Get object URL for either `jaeger-entry-new-vpc.template.yaml` or `jaeger-entry-existing-vpc.template.yaml` entry template from `templates folder`
-<add image here>
+   ![S3 bucket for deployment](docs/images/deployment/1-s3-bucket.png)
+ - Get object URL for either `jaeger-entry-new-vpc.template.yaml` or `jaeger-entry-existing-vpc.template.yaml` entry template from `templates` folder
+   ![CloudFormation templates objet URL](docs/images/deployment/2-object-url.png)
  - Go to [AWS CloudFormation console](https://console.aws.amazon.com/cloudformation/) - select the region you want to deploy the Quick Start to and click `Create Stack` -> `With new resources`
-<add image here>
  - Use object URL for the entry template as `Amazon S3 URL`, click `Next`
-<add image here>
+   ![Create CloudFormation stack](docs/images/deployment/3-create-stack.png)
  - Specify the stack name and adjust the parameters as needed. Make sure that **AWS Quick Start configuration** parameters correctly reflect information about your S3 bucket. Click `Next` when ready
+   ![Quick Start bucket parameters](docs/images/deployment/4-bucket-parameters.png)
  - Review stack options on **Configure stack options** page, click `Next`
  - On the **Review** page, scroll to the bottom and ensure that the following options are enabled (needed as the Quick Start creates IAM resources):
    - **I acknowledge that AWS CloudFormation might create IAM resources with custom names**
    - **I acknowledge that AWS CloudFormation might require the following capability: CAPABILITY_AUTO_EXPAND**
  - Click `Create stack`
- - Wait until stack is in `CREATE_COMPLETE` state
- - Click on the stack and navigate to the `Outputs` tab. Use 
- - <ssm - load balancer URL>
+ - Wait until the stack is in `CREATE_COMPLETE` state
+ - Click on the stack and navigate to the `Outputs` tab. Use `JaegerURL` output to get DNS name of the load balancer.
 ## Running tests
 
 AWS Quick Starts rely on [TaskCat](https://github.com/aws-ia/taskcat) to validate the CloudFormation templates
