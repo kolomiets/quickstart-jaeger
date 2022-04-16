@@ -32,4 +32,4 @@
 :launch_link_existing_vpc: https://todo.com
 :template_link_existing_vpc: https://github.com/kolomiets/quickstart-jaeger/blob/main/templates/jaeger-entry-existing-vpc.template.yaml
 
-WARNING: Developer Preview Only
+WARNING: This is *NOT* an official https://aws.amazon.com/quickstart/[AWS Quick Start]. The project is built according to https://aws-quickstart.github.io/[AWS Quick Start Contributor's Guide] but it is not approved by AWS and Jaeger teams.
