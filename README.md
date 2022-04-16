@@ -1,3 +1,9 @@
+# Disclaimer
+
+This is **NOT** an official [AWS Quick Start](https://aws.amazon.com/quickstart/).
+The project is built according to [AWS Quick Start Contributor's Guide](https://aws-quickstart.github.io/)
+but it is not approved by AWS and Jaeger teams.
+
 # Modular and Scalable Jaeger Architecture on AWS
 
 ![Jaeger Logo](docs/images/jaeger-horizontal-color.png)
