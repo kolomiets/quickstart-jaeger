@@ -44,6 +44,7 @@ Metadata:
           - PublicSubnet1CIDR
           - PublicSubnet2CIDR
           - PublicSubnet3CIDR
+          - CreateVpcEndpoints
       - Label:
           default: Jaeger configuration
         Parameters:
@@ -108,6 +109,8 @@ Metadata:
         default: Public subnet 2 CIDR
       PublicSubnet3CIDR:
         default: Public subnet 3 CIDR
+      CreateVpcEndpoints:
+        default: Create VPC endpoints
     # Jaeger configuration
       JaegerVersion:
         default: Jaeger version
@@ -233,16 +236,21 @@ Parameters:
     Description: CIDR block for the public (DMZ) subnet 3, located in Availability
       Zone 3.
     Type: String
+  CreateVpcEndpoints:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'No'
+    Description: Choose "Yes" to keep traffic between Jaeger and AWS services inside VPC.
 
 # Jaeger parameters
   JaegerVersion:
     Type: String
-    Default: '1.32'
+    Default: '1.33'
     Description: Version of the Jaeger release.
   StorageBackend:
     Type: String
     Default: 'InMemory'
-    AllowedValues: [ 'InMemory', 'Elasticseach', 'Cassandra' ]
+    AllowedValues: [ 'InMemory', 'Elasticseach' ]
     Description: Jaeger storage backend.
   InternalLoadBalancer:
     Type: String
@@ -433,6 +441,7 @@ Resources:
         PrivateSubnet1ID: !GetAtt VPCStack.Outputs.PrivateSubnet1AID
         PrivateSubnet2ID: !GetAtt VPCStack.Outputs.PrivateSubnet2AID
         PrivateSubnet3ID: !If [Using3AvailabilityZones, !GetAtt VPCStack.Outputs.PrivateSubnet3AID, !Ref 'AWS::NoValue']
+        CreateVpcEndpoints: !Ref CreateVpcEndpoints
         # Jaeger parameters
         JaegerVersion: !Ref JaegerVersion
         StorageBackend: !Ref StorageBackend
