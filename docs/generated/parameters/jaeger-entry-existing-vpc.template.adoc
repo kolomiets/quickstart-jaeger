@@ -19,13 +19,14 @@ Multiple Jaeger environments with different names can be deployed in the same re
 (`PrivateSubnet3ID`)|`**__Blank string__**`|ID of the private subnet in Availability Zone 3 of your existing VPC (e.g., subnet-abd39039).|Public subnet 1 ID
 (`PublicSubnet1ID`)|`**__Requires input__**`|ID of the public subnet in Availability Zone 1 of your existing VPC (e.g., subnet-a0246ccd).|Public subnet 2 ID
 (`PublicSubnet2ID`)|`**__Requires input__**`|ID of the public subnet in Availability Zone 2 of your existing VPC (e.g., subnet-b1236eea).|Public subnet 3 ID
-(`PublicSubnet3ID`)|`**__Blank string__**`|ID of the public subnet in Availability Zone 3 of your existing VPC (e.g., subnet-c3456aba).
+(`PublicSubnet3ID`)|`**__Blank string__**`|ID of the public subnet in Availability Zone 3 of your existing VPC (e.g., subnet-c3456aba).|Create VPC endpoints
+(`CreateVpcEndpoints`)|`No`|Choose "Yes" to keep traffic between Jaeger and AWS services inside VPC.
 |===
 .Jaeger configuration
 [width="100%",cols="16%,11%,73%",options="header",]
 |===
 |Parameter label (name) |Default value|Description|Jaeger version
-(`JaegerVersion`)|`1.32`|Version of the Jaeger release.|Jaeger storage backend
+(`JaegerVersion`)|`1.33`|Version of the Jaeger release.|Jaeger storage backend
 (`StorageBackend`)|`InMemory`|Jaeger storage backend.|Use internal load balancer
 (`InternalLoadBalancer`)|`No`|Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
 |===
