@@ -36,6 +36,11 @@ Parameters:
     Type: String
     Description: ID of the private subnet in Availability Zone 3 of your existing VPC (e.g., subnet-abd39039).
     Default: ''
+  CreateVpcEndpoints:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'No'
+    Description: Choose "Yes" to keep traffic between Jaeger and AWS services inside VPC.
 
 # Jaeger parameters
   JaegerVersion:
@@ -114,6 +119,7 @@ Conditions:
   InternalLoadBalancer: !Equals [!Ref InternalLoadBalancer, 'Yes']
   ExportMetrics: !Equals [!Ref ExportMetrics, 'Yes']
   EnableContainerInsights: !Equals [!Ref EnableContainerInsights, 'Yes']
+  CreateVpcEndpoints: !Equals [!Ref CreateVpcEndpoints, 'Yes']
 
   InMemoryStorage: !Equals [!Ref StorageBackend, 'InMemory']
   ElasticseachStorage: !Equals [!Ref StorageBackend, 'Elasticseach']
@@ -122,6 +128,20 @@ Conditions:
   CustomDomainName: !Not [!Equals [!Ref PublicDNS, 'Disabled']]
 
 Resources:
+
+  Endpoints:
+    Type: AWS::CloudFormation::Stack
+    Condition: CreateVpcEndpoints
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/workload/jaeger-endpoints-template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        VPCID: !Ref VPCID
+        PrivateSubnet1ID: !Ref PrivateSubnet1ID
+        PrivateSubnet2ID: !Ref PrivateSubnet2ID
+        PrivateSubnet3ID: !Ref PrivateSubnet3ID
 
   Cluster:
     Type: AWS::ECS::Cluster
