@@ -106,3 +106,12 @@ docker run jaeger-taskcat
 docker run jaeger-taskcat test -h
 docker run jaeger-taskcat test run -h
 ```
+
+
+
+
+
+
+
+
+docker run -e TEST_CONFIG_FILE=/config/performance.yaml -e ELASTICSEARCH_PROVIDER=none -v $(pwd):/config -it jkandasa/jaeger-performance-test:3.6
