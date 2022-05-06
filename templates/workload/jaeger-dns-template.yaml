@@ -2,6 +2,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Performs Jaeger DNS configuration (TODO)
 
 Parameters:
+  EnvironmentName:
+    Type: String
 # VPC parameters
   VPCID:
     Type: AWS::EC2::VPC::Id
@@ -117,6 +119,32 @@ Resources:
       AliasTarget:
         HostedZoneId: !Ref TargetHostedZoneId
         DNSName: !Ref TargetDNSName
+
+# SSM parameters to simplify further integrations
+  PublicHostedZoneIDParameter:
+    Type: AWS::SSM::Parameter
+    Condition: CreatePublicHostedZone
+    Properties:
+      Description: Public Hosted Zone ID
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/dns/public-hosted-zone-id"
+      Type: String
+      Value: !Ref PublicHostedZone
+  PublicHostedZoneIDParameter:
+    Type: AWS::SSM::Parameter
+    Condition: CreatePrivateHostedZone
+    Properties:
+      Description: Private Hosted Zone ID
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/dns/private-hosted-zone-id"
+      Type: String
+      Value: !Ref PrivateHostedZone
+  CertificateArnParameter:
+    Type: AWS::SSM::Parameter
+    Condition: CreateCertificate
+    Properties:
+      Description: Private Hosted Zone ID
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/dns/certificate-arn"
+      Type: String
+      Value: !Ref TlsCertificate
 
 Outputs:
   CertificateArn: 

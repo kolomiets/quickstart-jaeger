@@ -203,6 +203,7 @@ Resources:
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
+        EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
         DomainName: !Ref DomainName
         SubdomainName: !Ref SubdomainName
@@ -299,6 +300,59 @@ Resources:
         ScrapeIntervalSeconds: !Ref ScrapeIntervalSeconds
         ScrapeTimeoutSeconds: !Ref ScrapeTimeoutSeconds
         ClusterMetricsCollectionInterval: !Ref ClusterMetricsCollectionInterval
+
+# SSM parameters to simplify further integrations
+  VPCIDParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Jaeger VPC ID
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/vpc/id"
+      Type: String
+      Value: !Ref VPCID
+  VPCCIDRParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Jaeger VPC CIDR
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/vpc/cidr"
+      Type: String
+      Value: !Ref VPCCIDR
+  VPCPublicSubnetsParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Jaeger VPC Public Subnets
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/vpc/public-subnets"
+      Type: String
+      Value: !If 
+        - Using3AvailabilityZones
+        - !Join [ ',', [ !Ref PublicSubnet1ID, !Ref PublicSubnet2ID, !Ref PublicSubnet3ID ] ]
+        - !Join [ ',', [ !Ref PublicSubnet1ID, !Ref PublicSubnet2ID ] ]
+  VPCPrivateSubnetsParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Jaeger VPC Private Subnets
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/vpc/private-subnets"
+      Type: String
+      Value: !If
+        - Using3AvailabilityZones
+        - !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID, !Ref PrivateSubnet3ID ] ]
+        - !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID ] ]
+  DomainNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Jaeger domain name
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/load-balancer/domain"
+      Type: String
+      Value: !If [CustomDomainName, !Sub '${SubdomainName}.${DomainName}', !GetAtt LoadBalancer.DNSName]
+  DomainURLParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Jaeger URL
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/load-balancer/url"
+      Type: String
+      Value: !Sub 
+        - '${Protocol}://${JaegerDomainName}'
+        - Protocol: !If [HttpsProtocol, https, http]
+          JaegerDomainName: !If [CustomDomainName, !Sub '${SubdomainName}.${DomainName}', !GetAtt LoadBalancer.DNSName]
 
 Outputs:
   JaegerURL:
