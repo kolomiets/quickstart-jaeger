@@ -51,7 +51,13 @@ Parameters:
   InternalLoadBalancer:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
-
+  OpenTelemetryCollector:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+  OpenTelemetryCollectorImage:
+    Type: String
+  OpenTelemetryCollectorVersion:
+    Type: String
 # Elasticsearch parameters
   ESEngineVersion: 
     Type: String
@@ -119,6 +125,7 @@ Conditions:
   InternalLoadBalancer: !Equals [!Ref InternalLoadBalancer, 'Yes']
   ExportMetrics: !Equals [!Ref ExportMetrics, 'Yes']
   EnableContainerInsights: !Equals [!Ref EnableContainerInsights, 'Yes']
+  OpenTelemetryCollector: !Equals [!Ref OpenTelemetryCollector, 'Yes']
   CreateVpcEndpoints: !Equals [!Ref CreateVpcEndpoints, 'Yes']
 
   InMemoryStorage: !Equals [!Ref StorageBackend, 'InMemory']
@@ -163,6 +170,30 @@ Resources:
       LoadBalancerAttributes:
         - Key: deletion_protection.enabled
           Value: "false"
+
+  OtelStack:
+    Type: AWS::CloudFormation::Stack
+    Condition: OpenTelemetryCollector
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/workload/jaeger-otel-template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        # Basic Configuration
+        EnvironmentName: !Ref EnvironmentName
+        # VPC parameters
+        VPCID: !Ref VPCID
+        VPCCIDR: !Ref VPCCIDR
+        PrivateSubnet1ID: !Ref PrivateSubnet1ID
+        PrivateSubnet2ID: !Ref PrivateSubnet2ID
+        PrivateSubnet3ID: !Ref PrivateSubnet3ID
+        # Jaeger parameters
+        ClusterArn: !GetAtt Cluster.Arn
+        LoadBalancerArn: !Ref LoadBalancer
+        JaegerEndpoint: !If [CustomDomainName, !Sub '${SubdomainName}.${DomainName}', !GetAtt LoadBalancer.DNSName]
+        OpenTelemetryCollectorImage: !Ref OpenTelemetryCollectorImage
+        OpenTelemetryCollectorVersion: !Ref OpenTelemetryCollectorVersion
 
   DNSStack:
     Type: AWS::CloudFormation::Stack

@@ -1,0 +1,229 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys OpenTelemetry Collector (TODO)
+
+Parameters:
+# Basic Configuration
+  EnvironmentName:
+    Type: String
+# VPC parameters
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+    Description: ID of your existing VPC (e.g., vpc-0343606e).
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    Type: String  
+  PrivateSubnet1ID:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet2ID:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet3ID:
+    Type: String
+    Default: ''
+# Jaeger parameters
+  ClusterArn:
+    Type: String
+  LoadBalancerArn:
+    Type: String
+  JaegerEndpoint:
+    Type: String
+  OpenTelemetryCollectorImage:
+    Type: String
+  OpenTelemetryCollectorVersion:
+    Type: String
+
+Conditions:
+  Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
+
+Resources:
+
+# Configuration
+  ConfigurationParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Jaeger OpenTelemetry Collector configuration
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/otel-collector-config"
+      Type: String
+      Value:
+        Fn::Base64:
+          Fn::Sub: |
+            receivers:
+              otlp:
+                protocols:
+                  grpc:
+                  http:
+            exporters:
+              logging:
+                loglevel: debug
+              jaeger:
+                endpoint: ${JaegerEndpoint}:14250
+                tls:
+                  insecure: true
+            service:
+              pipelines:
+                traces:
+                  receivers: [otlp]
+                  exporters: [logging, jaeger]
+
+# Target Groups
+  TargetGroup4317:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 4317
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+      Tags:
+        - Key: Name
+          Value: !Sub jaeger-4317-${EnvironmentName}
+
+# Listeners
+  Listener4317:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroup4317
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
+      Port: 4317
+      Protocol: TCP
+
+# Roles
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: "2012-10-17"
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: "2012-10-17"
+      Policies:
+        - PolicyName: jaeger-otel-execution-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: !GetAtt LogGroup.Arn
+              - Action:
+                  - ssm:GetParameters
+                  - ssm:GetParameter
+                Effect: Allow
+                Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ConfigurationParameter}"
+
+# Task Definition
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub quickstart-jaeger-otel-${EnvironmentName}
+      Volumes:
+        - Name: otel-conf-volume
+          Host: {}
+      ContainerDefinitions:
+        - Name: jaeger-otel
+          Essential: true
+          Image: !Sub ${OpenTelemetryCollectorImage}:${OpenTelemetryCollectorVersion}
+          Command:
+            - --config=/otel/conf/jaeger-export.conf
+          DependsOn:
+          - Condition: COMPLETE
+            ContainerName: jaeger-otel-config
+          PortMappings:
+            - ContainerPort: 4317 # Default endpoint for OpenTelemetry receiver
+              Protocol: tcp
+          MountPoints:
+            - ContainerPath: /otel/conf
+              SourceVolume: otel-conf-volume
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: jaeger-otel
+              awslogs-region: !Ref AWS::Region
+        - Name: jaeger-otel-config
+          Image: bash
+          Essential: false
+          Command:
+            - -c
+            - echo $OTEL_CONFIG | base64 -d - | tee /otel/conf/jaeger-export.conf
+          Secrets:
+            - Name: OTEL_CONFIG
+              ValueFrom: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ConfigurationParameter}"
+          MountPoints:
+            - ContainerPath: /otel/conf
+              SourceVolume: otel-conf-volume
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: jaeger-otel-config
+              awslogs-region: !Ref AWS::Region
+      Cpu: "1024"
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
+      Memory: "2048"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt TaskRole.Arn
+
+# Service
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: jaeger-otel
+      Cluster: !Ref ClusterArn
+      DesiredCount: 1
+      HealthCheckGracePeriodSeconds: 30
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: jaeger-otel
+          ContainerPort: 4317
+          TargetGroupArn: !Ref TargetGroup4317
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !GetAtt ServiceSecurityGroup.GroupId
+          Subnets:
+            - !Ref PrivateSubnet1ID
+            - !Ref PrivateSubnet2ID
+            - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
+      TaskDefinition: !Ref TaskDefinition
+
+  ServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: quickstart-jaeger/jaeger/jaeger-otel/SecurityGroup
+      VpcId: !Ref VPCID
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+      SecurityGroupIngress:
+        - CidrIp: !Ref VPCCIDR
+          Description: Allow ECS Service access (port 4317) from within VPC
+          IpProtocol: tcp
+          FromPort: 4317
+          ToPort: 4317

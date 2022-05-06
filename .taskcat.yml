@@ -26,6 +26,7 @@ tests:
       PrivateDNS: CreateNew
       ExportMetrics: 'Yes'
       EnableContainerInsights: 'Yes'
+      OpenTelemetryCollector: 'Yes'
       CreateVpcEndpoints: 'Yes'
     regions:
     - us-east-1

@@ -52,6 +52,12 @@ Metadata:
           - StorageBackend
           - InternalLoadBalancer
       - Label:
+          default: OpenTelemetry Collector configuration
+        Parameters:
+          - OpenTelemetryCollector
+          - OpenTelemetryCollectorImage
+          - OpenTelemetryCollectorVersion
+      - Label:
           default: "[Only for Elasticsearch backend] Elasticsearch configuration"
         Parameters:
           - ESEngineVersion
@@ -118,7 +124,14 @@ Metadata:
         default: Jaeger storage backend
       InternalLoadBalancer:
         default: Use internal load balancer
-    # Elasticsearch parameters
+    # OpenTelemetry Collector configuration
+      OpenTelemetryCollector:
+        default: OpenTelemetry Collector
+      OpenTelemetryCollectorImage:
+        default: OpenTelemetry Collector image
+      OpenTelemetryCollectorVersion:
+        default: OpenTelemetry Collector version
+    # Elasticsearch configuration
       ESEngineVersion: 
         default: Elasticsearch version
       ESInstanceCount:
@@ -257,6 +270,21 @@ Parameters:
     AllowedValues: [ 'Yes', 'No' ]
     Default: 'No'
     Description: Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
+
+# OpenTelemetry Collector parameters
+  OpenTelemetryCollector:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'No'
+    Description: Choose "Yes" to deploy OpenTelemetry Collector in fron of Jaeger.
+  OpenTelemetryCollectorImage:
+    Type: String
+    Default: otel/opentelemetry-collector
+    Description: Docker image for the OpenTelemetry Collector
+  OpenTelemetryCollectorVersion:
+    Type: String
+    Default: '0.50.0'
+    Description: Version of the OpenTelemetry Collector.
 
 # Elasticsearch parameters
   ESEngineVersion: 
@@ -446,6 +474,10 @@ Resources:
         JaegerVersion: !Ref JaegerVersion
         StorageBackend: !Ref StorageBackend
         InternalLoadBalancer: !Ref InternalLoadBalancer
+        # OpenTelemetry Collector parameters
+        OpenTelemetryCollector: !Ref OpenTelemetryCollector
+        OpenTelemetryCollectorImage: !Ref OpenTelemetryCollectorImage
+        OpenTelemetryCollectorVersion: !Ref OpenTelemetryCollectorVersion
         # Elasticsearch parameters
         ESEngineVersion: !Ref ESEngineVersion 
         ESInstanceCount: !Ref ESInstanceCount
