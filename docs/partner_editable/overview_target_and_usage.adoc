@@ -17,10 +17,10 @@ This Quick Start helps you to deploy a https://docs.aws.amazon.com/whitepapers/l
 distributed tracing backend on the Amazon Web Services (AWS) Cloud.
 
 You can use the AWS CloudFormation templates included with the Quick Start to deploy Jaeger 
-in your AWS account in about 10-30 minutes. The Quick Start automates the following:
+in your AWS account in about 10-30 minutes. The Quick Start automates the following (see link:#_deployment_options[Deployment options]):
 
-* Deploying Jaeger into a new VPC
-* Deploying Jaeger into an existing VPC
+* **Deploying Jaeger into a new VPC**
+* **Deploying Jaeger into an existing VPC**
 
 This Quick Start is for users who want a repeatable, customizable reference deployment 
 for Jaeger using https://aws.amazon.com/cloudformation/[AWS CloudFormation].

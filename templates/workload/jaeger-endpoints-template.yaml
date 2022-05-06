@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys VPC endpoints used by Jaeger services (TODO)
+
+Parameters:
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+  PrivateSubnet1ID:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet2ID:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet3ID:
+    Type: String
+    Default: ''
+
+Conditions:
+  Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
+
+Resources:
+
+  LogsEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
+      VpcId: !Ref VPCID
+      SubnetIds: 
+        - !Ref PrivateSubnet1ID
+        - !Ref PrivateSubnet2ID
+        - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
+
+  SecretsEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.secretsmanager'
+      VpcId: !Ref VPCID
+      SubnetIds: 
+        - !Ref PrivateSubnet1ID
+        - !Ref PrivateSubnet2ID
+        - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
+
+  PrometheusEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.aps-workspaces'
+      VpcId: !Ref VPCID
+      SubnetIds: 
+        - !Ref PrivateSubnet1ID
+        - !Ref PrivateSubnet2ID
+        - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']

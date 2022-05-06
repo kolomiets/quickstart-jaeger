@@ -21,6 +21,7 @@
 // for example, 1.25 hours, 2 hours, 2.5 hours.
 :deployment_time: 15 minutes to 1 hour
 :default_deployment_region: us-east-1
+:custom_number_of_deploy_steps:
 :parameters_as_appendix:
 // Uncomment the following two attributes if you are using an AWS Marketplace listing.
 // Additional content will be generated automatically based on these attributes.
@@ -31,4 +32,4 @@
 :launch_link_existing_vpc: https://todo.com
 :template_link_existing_vpc: https://github.com/kolomiets/quickstart-jaeger/blob/main/templates/jaeger-entry-existing-vpc.template.yaml
 
-WARNING: Developer Preview Only
+WARNING: This is *NOT* an official https://aws.amazon.com/quickstart/[AWS Quick Start]. The project is built according to https://aws-quickstart.github.io/[AWS Quick Start Contributor's Guide] but it is not approved by AWS and Jaeger teams.

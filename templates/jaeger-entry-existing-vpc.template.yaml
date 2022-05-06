@@ -43,6 +43,7 @@ Metadata:
           - PublicSubnet1ID
           - PublicSubnet2ID
           - PublicSubnet3ID
+          - CreateVpcEndpoints
       - Label:
           default: Jaeger configuration
         Parameters:
@@ -111,6 +112,8 @@ Metadata:
         default: Private subnet 2 ID
       PrivateSubnet3ID:
         default: Private subnet 3 ID
+      CreateVpcEndpoints:
+        default: Create VPC endpoints
     # Jaeger configuration
       JaegerVersion:
         default: Jaeger version
@@ -216,16 +219,21 @@ Parameters:
     Type: String
     Description: ID of the private subnet in Availability Zone 3 of your existing VPC (e.g., subnet-abd39039).
     Default: ''
-    
+  CreateVpcEndpoints:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'No'
+    Description: Choose "Yes" to keep traffic between Jaeger and AWS services inside VPC.
+
 # Jaeger parameters
   JaegerVersion:
     Type: String
-    Default: '1.32'
+    Default: '1.33'
     Description: Version of the Jaeger release.
   StorageBackend:
     Type: String
     Default: 'InMemory'
-    AllowedValues: [ 'InMemory', 'Elasticseach', 'Cassandra' ]
+    AllowedValues: [ 'InMemory', 'Elasticseach' ]
     Description: Jaeger storage backend.
   InternalLoadBalancer:
     Type: String
@@ -402,6 +410,7 @@ Resources:
         PrivateSubnet1ID: !Ref PrivateSubnet1ID
         PrivateSubnet2ID: !Ref PrivateSubnet2ID
         PrivateSubnet3ID: !Ref PrivateSubnet3ID
+        CreateVpcEndpoints: !Ref CreateVpcEndpoints
         # Jaeger parameters
         JaegerVersion: !Ref JaegerVersion
         StorageBackend: !Ref StorageBackend
