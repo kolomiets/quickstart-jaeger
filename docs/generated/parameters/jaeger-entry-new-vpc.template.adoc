@@ -31,6 +31,14 @@ Multiple Jaeger environments with different names can be deployed in the same re
 (`StorageBackend`)|`InMemory`|Jaeger storage backend.|Use internal load balancer
 (`InternalLoadBalancer`)|`No`|Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
 |===
+.OpenTelemetry Collector configuration
+[width="100%",cols="16%,11%,73%",options="header",]
+|===
+|Parameter label (name) |Default value|Description|OpenTelemetry Collector
+(`OpenTelemetryCollector`)|`No`|Choose "Yes" to deploy OpenTelemetry Collector in fron of Jaeger.|OpenTelemetry Collector image
+(`OpenTelemetryCollectorImage`)|`otel/opentelemetry-collector`|Docker image for the OpenTelemetry Collector|OpenTelemetry Collector version
+(`OpenTelemetryCollectorVersion`)|`0.50.0`|Version of the OpenTelemetry Collector.
+|===
 .[Only for Elasticsearch backend] Elasticsearch configuration
 [width="100%",cols="16%,11%,73%",options="header",]
 |===

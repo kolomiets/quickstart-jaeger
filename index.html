@@ -2033,7 +2033,42 @@ Multiple Jaeger environments with different names can be deployed in the same re
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 4. [Only for Elasticsearch backend] Elasticsearch configuration</caption>
+<caption class="title">Table 4. OpenTelemetry Collector configuration</caption>
+<colgroup>
+<col style="width: 16%;">
+<col style="width: 11%;">
+<col style="width: 73%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter label (name)</th>
+<th class="tableblock halign-left valign-top">Default value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OpenTelemetry Collector
+(<code>OpenTelemetryCollector</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>No</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Choose "Yes" to deploy OpenTelemetry Collector in fron of Jaeger.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OpenTelemetry Collector image
+(<code>OpenTelemetryCollectorImage</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>otel/opentelemetry-collector</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker image for the OpenTelemetry Collector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OpenTelemetry Collector version
+(<code>OpenTelemetryCollectorVersion</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0.50.0</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Version of the OpenTelemetry Collector.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 5. [Only for Elasticsearch backend] Elasticsearch configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2095,7 +2130,7 @@ Any value accepted by [date-math](<a href="https://www.elastic.co/guide/en/elast
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 5. Metrics configuration</caption>
+<caption class="title">Table 6. Metrics configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2143,7 +2178,7 @@ Container Insights ensure performance metrics are available in CloudWatch.</p></
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 6. DNS configuration</caption>
+<caption class="title">Table 7. DNS configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2211,7 +2246,7 @@ Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 7. AWS Quick Start configuration</caption>
+<caption class="title">Table 8. AWS Quick Start configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2249,7 +2284,7 @@ Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation
 <div class="sect2">
 <h3 id="_launch_into_an_existing_vpc">Launch into an existing VPC</h3>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 8. Basic configuration</caption>
+<caption class="title">Table 9. Basic configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2274,7 +2309,7 @@ Multiple Jaeger environments with different names can be deployed in the same re
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 9. VPC network configuration</caption>
+<caption class="title">Table 10. VPC network configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2345,7 +2380,7 @@ Multiple Jaeger environments with different names can be deployed in the same re
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 10. Jaeger configuration</caption>
+<caption class="title">Table 11. Jaeger configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2380,7 +2415,42 @@ Multiple Jaeger environments with different names can be deployed in the same re
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 11. [Only for Elasticsearch backend] Elasticsearch configuration</caption>
+<caption class="title">Table 12. OpenTelemetry Collector configuration</caption>
+<colgroup>
+<col style="width: 16%;">
+<col style="width: 11%;">
+<col style="width: 73%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter label (name)</th>
+<th class="tableblock halign-left valign-top">Default value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OpenTelemetry Collector
+(<code>OpenTelemetryCollector</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>No</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Choose "Yes" to deploy OpenTelemetry Collector in fron of Jaeger.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OpenTelemetry Collector image
+(<code>OpenTelemetryCollectorImage</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>otel/opentelemetry-collector</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker image for the OpenTelemetry Collector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OpenTelemetry Collector version
+(<code>OpenTelemetryCollectorVersion</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0.50.0</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Version of the OpenTelemetry Collector.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 13. [Only for Elasticsearch backend] Elasticsearch configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2442,7 +2512,7 @@ Any value accepted by [date-math](<a href="https://www.elastic.co/guide/en/elast
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 12. Metrics configuration</caption>
+<caption class="title">Table 14. Metrics configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2490,7 +2560,7 @@ Container Insights ensure performance metrics are available in CloudWatch.</p></
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 13. DNS configuration</caption>
+<caption class="title">Table 15. DNS configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
@@ -2558,7 +2628,7 @@ Choose "CreateNew" to provision a new ACM certificate with DNS Domain validation
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 14. AWS Quick Start configuration</caption>
+<caption class="title">Table 16. AWS Quick Start configuration</caption>
 <colgroup>
 <col style="width: 16%;">
 <col style="width: 11%;">
