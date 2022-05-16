@@ -2030,6 +2030,30 @@ Multiple Jaeger environments with different names can be deployed in the same re
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>No</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger CPU
+(<code>JaegerCpu</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>256</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger CPU. See <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html" class="bare">https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html</a> for supported values.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger Memory
+(<code>JaegerMemory</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>512</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger Collector Memory. See <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html" class="bare">https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html</a> for supported values.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum number of Jaeger instances
+(<code>JaegerMinReplicaCount</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum number of Jaeger instances. Note that InMemory Jaeger always runs as a single instance.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of Jaeger instances
+(<code>JaegerMaxReplicaCount</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>4</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of Jaeger instances. Note that InMemory Jaeger always runs as a single instance.</p></td>
+</tr>
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
@@ -2165,7 +2189,7 @@ For valid values, see <a href="https://docs.aws.amazon.com/opensearch-service/la
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Dependencies job schedule
 (<code>ESDependenciesJobSchedule</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0 1 \* * *</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0 1 \* * ? *</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">cron expression that is used to re-build service dependencies (default is daily at 1am).</p></td>
 </tr>
 <tr>
@@ -2467,6 +2491,30 @@ Multiple Jaeger environments with different names can be deployed in the same re
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>No</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger CPU
+(<code>JaegerCpu</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>256</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger CPU. See <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html" class="bare">https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html</a> for supported values.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger Memory
+(<code>JaegerMemory</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>512</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Jaeger Collector Memory. See <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html" class="bare">https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html</a> for supported values.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum number of Jaeger instances
+(<code>JaegerMinReplicaCount</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum number of Jaeger instances. Note that InMemory Jaeger always runs as a single instance.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of Jaeger instances
+(<code>JaegerMaxReplicaCount</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>4</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of Jaeger instances. Note that InMemory Jaeger always runs as a single instance.</p></td>
+</tr>
 </tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
@@ -2602,7 +2650,7 @@ For valid values, see <a href="https://docs.aws.amazon.com/opensearch-service/la
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Dependencies job schedule
 (<code>ESDependenciesJobSchedule</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0 1 \* * *</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0 1 \* * ? *</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">cron expression that is used to re-build service dependencies (default is daily at 1am).</p></td>
 </tr>
 <tr>

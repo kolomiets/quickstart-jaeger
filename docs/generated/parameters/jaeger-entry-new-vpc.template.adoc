@@ -29,7 +29,11 @@ Multiple Jaeger environments with different names can be deployed in the same re
 |Parameter label (name) |Default value|Description|Jaeger version
 (`JaegerVersion`)|`1.33`|Version of the Jaeger release.|Jaeger storage backend
 (`StorageBackend`)|`InMemory`|Jaeger storage backend.|Use internal load balancer
-(`InternalLoadBalancer`)|`No`|Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
+(`InternalLoadBalancer`)|`No`|Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.|Jaeger CPU
+(`JaegerCpu`)|`256`|Jaeger CPU. See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html for supported values.|Jaeger Memory
+(`JaegerMemory`)|`512`|Jaeger Collector Memory. See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html for supported values.|Minimum number of Jaeger instances
+(`JaegerMinReplicaCount`)|`2`|Minimum number of Jaeger instances. Note that InMemory Jaeger always runs as a single instance.|Maximum number of Jaeger instances
+(`JaegerMaxReplicaCount`)|`4`|Maximum number of Jaeger instances. Note that InMemory Jaeger always runs as a single instance.
 |===
 .OpenTelemetry Collector configuration
 [width="100%",cols="16%,11%,73%",options="header",]
@@ -60,7 +64,7 @@ For valid values, see https://docs.aws.amazon.com/opensearch-service/latest/deve
 |Data node volume size
 (`ESVolumeSize`)|`10`|The size (in GiB) of the EBS volume for each data node.|Data node volume type
 (`ESVolumeType`)|`gp2`|The EBS volume type to use with the OpenSearch Service domain, such as standard, gp2, or io1.|Dependencies job schedule
-(`ESDependenciesJobSchedule`)|`0 1 \* * *`|cron expression that is used to re-build service dependencies (default is daily at 1am).|Dependencies job time range
+(`ESDependenciesJobSchedule`)|`0 1 \* * ? *`|cron expression that is used to re-build service dependencies (default is daily at 1am).|Dependencies job time range
 (`ESDependenciesJobTimeRange`)|`24h`|How far in the past the job should look to for spans, the maximum and default is `24h`.
 Any value accepted by [date-math](https://www.elastic.co/guide/en/elasticsearch/reference/current/common-options.html#date-math) can be used here, but the anchor is always `now`.
 
