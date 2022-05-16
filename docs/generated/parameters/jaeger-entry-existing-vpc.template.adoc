@@ -35,8 +35,16 @@ Multiple Jaeger environments with different names can be deployed in the same re
 |===
 |Parameter label (name) |Default value|Description|OpenTelemetry Collector
 (`OpenTelemetryCollector`)|`No`|Choose "Yes" to deploy OpenTelemetry Collector in fron of Jaeger.|OpenTelemetry Collector image
-(`OpenTelemetryCollectorImage`)|`otel/opentelemetry-collector`|Docker image for the OpenTelemetry Collector|OpenTelemetry Collector version
-(`OpenTelemetryCollectorVersion`)|`0.50.0`|Version of the OpenTelemetry Collector.
+(`OpenTelemetryCollectorImage`)|`otel/opentelemetry-collector-contrib`|Docker image for the OpenTelemetry Collector|OpenTelemetry Collector version
+(`OpenTelemetryCollectorVersion`)|`0.50.0`|Version of the OpenTelemetry Collector.|Memory ballast percentage
+(`MemoryBallastPercentage`)|`0`|Memory balast percentage. "0" disables memory ballast. See https://github.com/open-telemetry/opentelemetry-collector/blob/main/extension/ballastextension/README.md for further details.|Enable zPages
+(`EnableZPages`)|`No`|Choose "Yes" to enable zPages for OpenTelemetry Collector. See https://github.com/open-telemetry/opentelemetry-collector/tree/main/extension/zpagesextension for further details.|Enable pprof
+(`EnablePprof`)|`No`|Choose "Yes" to enable pprof for OpenTelemetry Collector. See https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/extension/pprofextension for further details.|Enable Service Performance Monitoring
+(`EnableSPM`)|`No`|Choose "Yes" to enable service performance monitoring metrics. See https://www.jaegertracing.io/docs/1.34/spm/ for further details.|OpenTelemetry Collector CPU
+(`CollectorCpu`)|`256`|OpenTelemetry Collector CPU. See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html for supported values.|OpenTelemetry Collector Memory
+(`CollectorMemory`)|`512`|OpenTelemetry Collector Memory. See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html for supported values.|Minimum number of OpenTelemetry Collector instances
+(`MinCollectorCount`)|`1`|Minimum number of OpenTelemetry Collector instances.|Maximum number of OpenTelemetry Collector instances
+(`MaxCollectorCount`)|`3`|Maximum number of OpenTelemetry Collector instances.
 |===
 .[Only for Elasticsearch backend] Elasticsearch configuration
 [width="100%",cols="16%,11%,73%",options="header",]
@@ -62,8 +70,11 @@ Any value accepted by [date-math](https://www.elastic.co/guide/en/elasticsearch/
 |Parameter label (name) |Default value|Description|Enable Amazon CloudWatch Container Inrights
 (`EnableContainerInsights`)|`No`|Choose "Yes" to enable integration with CloudWatch Container Insights. 
 Container Insights ensure performance metrics are available in CloudWatch.
-|Export Jaeger metrics
-(`ExportMetrics`)|`No`|Choose "Yes" to export Jaeger and ECS cluster metrics to Amazon Managed Service for Prometheus.|Metrics scrape interval
+|Export Prometheus metrics
+(`ExportMetrics`)|`Disabled`|Choose "UseExistingWorkspace" to provide Amazon Managed Service for Prometheus workspace Id where Jaeger metrics should be exported. 
+Choose "CreateNewWorkspace" to provision a Amazon Managed Service for Prometheus workspace and export Jaeger metrics there.
+|Prometheus Workspace Id
+(`PrometheusWorkspaceId`)|`**__Blank string__**`|Provide Amazon Managed Service for Prometheus workspace Id if you selected "UseExisting" above.|Metrics scrape interval
 (`ScrapeIntervalSeconds`)|`15`|Metrics scrape interval, in seconds|Metrics scrape timeout
 (`ScrapeTimeoutSeconds`)|`10`|Metrics scrape timeout, in seconds|Collection interval for ECS cluster metrics
 (`ClusterMetricsCollectionInterval`)|`20`|Collection interval for ECS cluster metrics, in seconds
