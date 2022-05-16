@@ -36,6 +36,10 @@ Parameters:
     AllowedValues: [ 'Yes', 'No' ]
   CertificateArn:
     Type: String
+  JaegerCpu:
+    Type: Number
+  JaegerMemory:
+    Type: Number
   # Metrics
   PrometheusWorkspaceId:
     Type: String
@@ -228,8 +232,8 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Sub quickstart-jaeger-all-in-one-${EnvironmentName}
-      Cpu: "1024"
-      Memory: "2048"
+      Cpu: !Sub "${JaegerCpu}"
+      Memory: !Sub "${JaegerMemory}"
       NetworkMode: awsvpc
       RequiresCompatibilities: [ FARGATE ]
       TaskRoleArn: !GetAtt TaskRole.Arn
@@ -238,6 +242,19 @@ Resources:
         - Name: jaeger-all-in-one
           Essential: true
           Image: !Sub jaegertracing/all-in-one:${JaegerVersion}
+          Environment:
+            - Name: SPAN_STORAGE_TYPE
+              Value: memory
+            - !If 
+              - EnableSPM
+              - Name: METRICS_STORAGE_TYPE
+                Value: prometheus
+              - !Ref "AWS::NoValue" 
+            - !If 
+              - EnableSPM
+              - Name: PROMETHEUS_SERVER_URL
+                Value: !Sub "http://localhost:9090/workspaces/${PrometheusWorkspaceId}"
+              - !Ref "AWS::NoValue" 
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -259,23 +276,10 @@ Resources:
               Protocol: tcp
             - ContainerPort: 16686
               Protocol: tcp
-          Environment:
-            - Name: SPAN_STORAGE_TYPE
-              Value: memory
-            - !If 
-              - EnableSPM
-              - Name: METRICS_STORAGE_TYPE
-                Value: prometheus
-              - !Ref "AWS::NoValue" 
-            - !If 
-              - EnableSPM
-              - Name: PROMETHEUS_SERVER_URL
-                Value: !Sub "http://localhost:9090/workspaces/${PrometheusWorkspaceId}"
-              - !Ref "AWS::NoValue" 
         - !If 
           - EnableSPM
           - Name: sigv4-proxy
-            Image: public.ecr.aws/aws-observability/aws-sigv4-proxy:latest # TODO
+            Image: public.ecr.aws/aws-observability/aws-sigv4-proxy:latest
             Essential: true
             Command:
               - "--port=:9090"
@@ -294,8 +298,9 @@ Resources:
   Service:
     Type: AWS::ECS::Service
     Properties:
-      ServiceName: jaeger-all-in-one
       Cluster: !Ref ClusterArn
+      ServiceName: jaeger-all-in-one
+      TaskDefinition: !Ref TaskDefinition
       DesiredCount: 1
       HealthCheckGracePeriodSeconds: 30
       LaunchType: FARGATE
@@ -324,7 +329,6 @@ Resources:
             - !Ref PrivateSubnet1ID
             - !Ref PrivateSubnet2ID
             - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
-      TaskDefinition: !Ref TaskDefinition
       Tags:
         # A necessary trick to force CloudFormation to wait until all listeners are created.
         # We extract listener ID from ARN, as not all characters are allowed in tags. ARN format: 

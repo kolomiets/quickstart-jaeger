@@ -51,11 +51,19 @@ Parameters:
   InternalLoadBalancer:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
+  JaegerCpu:
+    Type: Number
+  JaegerMemory:
+    Type: Number
+  JaegerMinReplicaCount:
+    Type: Number
+  JaegerMaxReplicaCount:
+    Type: Number
+
+# Otel Collector parameters  
   OpenTelemetryCollector:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
-
-# Otel Collector parameters  
   OpenTelemetryCollectorImage:
     Type: String
   OpenTelemetryCollectorVersion:
@@ -288,6 +296,8 @@ Resources:
         ExportMetrics: !Ref ExportMetrics 
         EnableSPM: !Ref EnableSPM
         CertificateArn: !GetAtt DNSStack.Outputs.CertificateArn
+        JaegerCpu: !Ref JaegerCpu
+        JaegerMemory: !Ref JaegerMemory
         # Prometheus parameters
         PrometheusWorkspaceId: !GetAtt MetricsBackendStack.Outputs.PrometheusWorkspaceId
 
@@ -309,12 +319,18 @@ Resources:
         PrivateSubnet2ID: !Ref PrivateSubnet2ID
         PrivateSubnet3ID: !Ref PrivateSubnet3ID
         # Jaeger parameters
+        ClusterName: !Ref Cluster
         ClusterArn: !GetAtt Cluster.Arn
         LoadBalancerArn: !Ref LoadBalancer
         LoadBalancerDomainName: !GetAtt LoadBalancer.DNSName
         JaegerVersion: !Ref JaegerVersion
         ExportMetrics: !Ref ExportMetrics
+        EnableSPM: !Ref EnableSPM
         CertificateArn: !GetAtt DNSStack.Outputs.CertificateArn
+        JaegerCpu: !Ref JaegerCpu
+        JaegerMemory: !Ref JaegerMemory
+        JaegerMinReplicaCount: !Ref JaegerMinReplicaCount
+        JaegerMaxReplicaCount: !Ref JaegerMaxReplicaCount
         # Elasticsearch parameters
         ESEngineVersion: !Ref ESEngineVersion 
         ESInstanceCount: !Ref ESInstanceCount
@@ -323,6 +339,8 @@ Resources:
         ESVolumeType: !Ref ESVolumeType
         ESDependenciesJobSchedule: !Ref ESDependenciesJobSchedule 
         ESDependenciesJobTimeRange: !Ref ESDependenciesJobTimeRange
+        # Prometheus parameters
+        PrometheusWorkspaceId: !GetAtt MetricsBackendStack.Outputs.PrometheusWorkspaceId
     
   MetricsStack:
     Type: AWS::CloudFormation::Stack
