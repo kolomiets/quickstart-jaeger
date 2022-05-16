@@ -19,6 +19,8 @@ Parameters:
     Type: String
     Default: ''
 # Jaeger parameters
+  ClusterName:
+    Type: String
   ClusterArn:
     Type: String
   LoadBalancerArn:
@@ -30,8 +32,19 @@ Parameters:
   ExportMetrics:
     Type: String
     AllowedValues: [ 'Disabled', 'UseExistingWorkspace', 'CreateNewWorkspace' ]
+  EnableSPM:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
   CertificateArn:
     Type: String
+  JaegerCpu:
+    Type: Number
+  JaegerMemory:
+    Type: Number
+  JaegerMinReplicaCount:
+    Type: Number
+  JaegerMaxReplicaCount:
+    Type: Number
 # Elasticsearch parameters
   ESEngineVersion: 
     Type: String
@@ -47,10 +60,14 @@ Parameters:
     Type: String
   ESDependenciesJobTimeRange: 
     Type: String
+  # Metrics
+  PrometheusWorkspaceId:
+    Type: String
 
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
   ExportMetrics: !Not [!Equals [!Ref ExportMetrics, 'Disabled']]
+  EnableSPM: !Equals [!Ref EnableSPM, 'Yes']
   CertificateProvided: !Not [!Equals [!Ref CertificateArn, '']]
   NoCertificateProvided: !Equals [!Ref CertificateArn, '']
 
@@ -226,6 +243,7 @@ Resources:
   SearchDomainMasterUserSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/es/credentials"
       GenerateSecretString:
         ExcludeCharacters: "{}'\\*[]()`"
         GenerateStringKey: password
@@ -259,7 +277,7 @@ Resources:
             Principal:
               AWS: '*'
             Action: 'es:*'
-            Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/jaeger-traces/*"
+            Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/jaeger-traces-${EnvironmentName}/*"
       AdvancedSecurityOptions:
         Enabled: true
         InternalUserDatabaseEnabled: true
@@ -349,6 +367,12 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Sub quickstart-jaeger-collector-${EnvironmentName}
+      Cpu: !Sub "${JaegerCpu}"
+      Memory: !Sub "${JaegerMemory}"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [ FARGATE ]
+      TaskRoleArn: !GetAtt CollectorTaskRole.Arn
+      ExecutionRoleArn: !GetAtt CollectorExecutionRole.Arn
       ContainerDefinitions:
         - Name: jaeger-collector
           Environment:
@@ -378,13 +402,6 @@ Resources:
           Secrets:
             - Name: ES_PASSWORD
               ValueFrom: !Sub "${SearchDomainMasterUserSecret}:password::"
-      Cpu: "1024"
-      TaskRoleArn: !GetAtt CollectorTaskRole.Arn
-      ExecutionRoleArn: !GetAtt CollectorExecutionRole.Arn
-      Memory: "2048"
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
       
   CollectorService:
     Type: AWS::ECS::Service
@@ -392,7 +409,7 @@ Resources:
       Cluster: !Ref ClusterArn
       ServiceName: jaeger-collector
       TaskDefinition: !Ref CollectorTaskDefinition
-      DesiredCount: 2
+      DesiredCount: !Ref JaegerMinReplicaCount
       HealthCheckGracePeriodSeconds: 30
       LaunchType: FARGATE
       LoadBalancers:
@@ -417,6 +434,53 @@ Resources:
             - !Ref PrivateSubnet1ID
             - !Ref PrivateSubnet2ID
             - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
+      Tags:
+        # A necessary trick to force CloudFormation to wait until all listeners are created.
+        # We extract listener ID from ARN, as not all characters are allowed in tags. ARN format: 
+        # arn:{partition}:elasticloadbalancing:{region}:{account-id}:listener/net/{nlb-name}/{nlb-id}/{listener-id}
+        - Key: ListenerIds
+          Value: !Join
+            - ' '
+            - - !Select [4, !Split ['/', !Select [5, !Split [':', !Ref Listener14250]]]] 
+              - !Select [4, !Split ['/', !Select [5, !Split [':', !Ref  Listener14268]]]]
+              - !If [ExportMetrics, !Select [4, !Split ['/', !Select [ 5, !Split [':', !Ref  Listener14269]]]], !Ref 'AWS::NoValue']
+
+  CollectorAutoScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref JaegerMaxReplicaCount
+      MinCapacity: !Ref JaegerMinReplicaCount
+      ResourceId: !Sub "service/${ClusterName}/${CollectorService.Name}"
+      RoleARN: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+  CollectorCPUAutoScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: CPUAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref CollectorAutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        DisableScaleIn: True # consider memory-based scaling more important
+        TargetValue: 75 
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+
+  CollectorMemoryAutoScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: MemoryAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref CollectorAutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 75 
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
 
   CollectorServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -460,12 +524,27 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
+        Version: "2012-10-17"
         Statement:
           - Action: sts:AssumeRole
             Effect: Allow
             Principal:
               Service: ecs-tasks.amazonaws.com
-        Version: "2012-10-17"
+      Policies:
+        - !If 
+          - EnableSPM
+          - PolicyName: jaeger-query-prometheus-access
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - aps:QueryMetrics
+                    - aps:GetLabels
+                    - aps:GetSeries
+                    - aps:GetMetricMetadata
+                  Resource: !Sub "arn:${AWS::Partition}:aps:${AWS::Region}:${AWS::AccountId}:workspace/${PrometheusWorkspaceId}"
+          - !Ref "AWS::NoValue"
 
   QueryExecutionRole:
     Type: AWS::IAM::Role
@@ -497,8 +576,16 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Sub quickstart-jaeger-query-${EnvironmentName}
+      Cpu: !Sub "${JaegerCpu}"
+      Memory: !Sub "${JaegerMemory}"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [ FARGATE ]
+      TaskRoleArn: !GetAtt QueryTaskRole.Arn
+      ExecutionRoleArn: !GetAtt QueryExecutionRole.Arn      
       ContainerDefinitions:
         - Name: jaeger-query
+          Essential: true
+          Image: !Sub jaegertracing/jaeger-query:${JaegerVersion}
           Environment:
             - Name: SPAN_STORAGE_TYPE
               Value: elasticsearch
@@ -506,8 +593,19 @@ Resources:
               Value: !Sub "https://${SearchDomain.DomainEndpoint}"
             - Name: ES_USERNAME
               Value: master-user
-          Essential: true
-          Image: !Sub jaegertracing/jaeger-query:${JaegerVersion}
+            - !If 
+              - EnableSPM
+              - Name: METRICS_STORAGE_TYPE
+                Value: prometheus
+              - !Ref "AWS::NoValue" 
+            - !If 
+              - EnableSPM
+              - Name: PROMETHEUS_SERVER_URL
+                Value: !Sub "http://localhost:9090/workspaces/${PrometheusWorkspaceId}"
+              - !Ref "AWS::NoValue" 
+          Secrets:
+            - Name: ES_PASSWORD
+              ValueFrom: !Sub "${SearchDomainMasterUserSecret}:password::"
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -521,16 +619,23 @@ Resources:
               Protocol: tcp
             - ContainerPort: 16687
               Protocol: tcp
-          Secrets:
-            - Name: ES_PASSWORD
-              ValueFrom: !Sub "${SearchDomainMasterUserSecret}:password::"
-      Cpu: "1024"
-      TaskRoleArn: !GetAtt QueryTaskRole.Arn
-      ExecutionRoleArn: !GetAtt QueryExecutionRole.Arn
-      Memory: "2048"
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
+        - !If 
+          - EnableSPM
+          - Name: sigv4-proxy
+            Image: public.ecr.aws/aws-observability/aws-sigv4-proxy:latest
+            Essential: true
+            Command:
+              - "--port=:9090"
+              - "--name=aps"
+              - !Sub "--region=${AWS::Region}"
+              - !Sub "--host=aps-workspaces.${AWS::Region}.amazonaws.com"
+            LogConfiguration:
+              LogDriver: awslogs
+              Options:
+                awslogs-group: !Ref QueryLogGroup
+                awslogs-stream-prefix: jaeger-query-sigv4-proxy
+                awslogs-region: !Ref AWS::Region
+          - !Ref "AWS::NoValue" 
 
   QueryService:
     Type: AWS::ECS::Service
@@ -538,7 +643,7 @@ Resources:
       Cluster: !Ref ClusterArn
       ServiceName: jaeger-query
       TaskDefinition: !Ref QueryTaskDefinition
-      DesiredCount: 2
+      DesiredCount: !Ref JaegerMinReplicaCount
       HealthCheckGracePeriodSeconds: 30
       LaunchType: FARGATE
       LoadBalancers:
@@ -560,6 +665,52 @@ Resources:
             - !Ref PrivateSubnet1ID
             - !Ref PrivateSubnet2ID
             - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
+      Tags:
+        # A necessary trick to force CloudFormation to wait until all listeners are created.
+        # We extract listener ID from ARN, as not all characters are allowed in tags. ARN format: 
+        # arn:{partition}:elasticloadbalancing:{region}:{account-id}:listener/net/{nlb-name}/{nlb-id}/{listener-id}
+        - Key: ListenerIds
+          Value: !Join
+            - ' '
+            - - !Select [4, !Split ['/', !Select [5, !Split [':', !If [CertificateProvided, !Ref HttpsListener, !Ref HttpListener]]]]] 
+              - !If [ExportMetrics, !Select [4, !Split ['/', !Select [ 5, !Split [':', !Ref  Listener16687]]]], !Ref 'AWS::NoValue']
+
+  QueryAutoScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref JaegerMaxReplicaCount
+      MinCapacity: !Ref JaegerMinReplicaCount
+      ResourceId: !Sub "service/${ClusterName}/${QueryService.Name}"
+      RoleARN: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+  QueryCPUAutoScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: CPUAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref QueryAutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        DisableScaleIn: True # consider memory-based scaling more important
+        TargetValue: 75 
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+
+  QueryMemoryAutoScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: MemoryAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref QueryAutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 75 
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
 
   QueryServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -586,7 +737,6 @@ Resources:
             FromPort: 16687
             ToPort: 16687
           - !Ref "AWS::NoValue"
-
 
 # Dependencies
 
@@ -636,6 +786,12 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Sub quickstart-jaeger-dependencies-${EnvironmentName}
+      Cpu: "1024"
+      Memory: "2048"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [ FARGATE ]
+      TaskRoleArn: !GetAtt DependensciesTaskRole.Arn
+      ExecutionRoleArn: !GetAtt DependenciesExecutionRole.Arn
       ContainerDefinitions:
         - Name: jaeger-dependencies
           Image: jaegertracing/spark-dependencies:latest
@@ -659,13 +815,6 @@ Resources:
               awslogs-group: !Ref DependenciesLogGroup
               awslogs-stream-prefix: jaeger-dependencies
               awslogs-region: !Ref AWS::Region
-      Cpu: "1024"
-      TaskRoleArn: !GetAtt DependensciesTaskRole.Arn
-      ExecutionRoleArn: !GetAtt DependenciesExecutionRole.Arn
-      Memory: "2048"
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
 
   DependenciesSecurityGroup:
     Type: AWS::EC2::SecurityGroup

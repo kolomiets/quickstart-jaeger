@@ -51,6 +51,10 @@ Metadata:
           - JaegerVersion
           - StorageBackend
           - InternalLoadBalancer
+          - JaegerCpu
+          - JaegerMemory
+          - JaegerMinReplicaCount
+          - JaegerMaxReplicaCount
       - Label:
           default: OpenTelemetry Collector configuration
         Parameters:
@@ -133,6 +137,14 @@ Metadata:
         default: Jaeger storage backend
       InternalLoadBalancer:
         default: Use internal load balancer
+      JaegerCpu:
+        default: Jaeger CPU
+      JaegerMemory:
+        default: Jaeger Memory
+      JaegerMinReplicaCount:
+        default: Minimum number of Jaeger instances
+      JaegerMaxReplicaCount:
+        default: Maximum number of Jaeger instances
     # OpenTelemetry Collector configuration
       OpenTelemetryCollector:
         default: OpenTelemetry Collector
@@ -297,6 +309,22 @@ Parameters:
     AllowedValues: [ 'Yes', 'No' ]
     Default: 'No'
     Description: Choose "Yes" to deploy Jaeger load balancer in private VPC subnets.
+  JaegerCpu:
+    Type: Number
+    Default: 256
+    Description: Jaeger CPU. See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html for supported values. 
+  JaegerMemory:
+    Type: Number
+    Default: 512
+    Description: Jaeger Collector Memory. See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html for supported values.
+  JaegerMinReplicaCount:
+    Type: Number
+    Default: 2
+    Description: Minimum number of Jaeger instances. Note that InMemory Jaeger always runs as a single instance.
+  JaegerMaxReplicaCount:
+    Type: Number
+    Default: 4
+    Description: Maximum number of Jaeger instances. Note that InMemory Jaeger always runs as a single instance.
 
 # OpenTelemetry Collector parameters
   OpenTelemetryCollector:
@@ -375,7 +403,7 @@ Parameters:
     Description: The EBS volume type to use with the OpenSearch Service domain, such as standard, gp2, or io1.
   ESDependenciesJobSchedule: 
     Type: String
-    Default: '0 1 * * *'
+    Default: '0 1 * * ? *'
     Description: cron expression that is used to re-build service dependencies (default is daily at 1am).
   ESDependenciesJobTimeRange: 
     Type: String
@@ -542,6 +570,10 @@ Resources:
         JaegerVersion: !Ref JaegerVersion
         StorageBackend: !Ref StorageBackend
         InternalLoadBalancer: !Ref InternalLoadBalancer
+        JaegerCpu: !Ref JaegerCpu
+        JaegerMemory: !Ref JaegerMemory
+        JaegerMinReplicaCount: !Ref JaegerMinReplicaCount
+        JaegerMaxReplicaCount: !Ref JaegerMaxReplicaCount
         # OpenTelemetry Collector parameters
         OpenTelemetryCollector: !Ref OpenTelemetryCollector
         OpenTelemetryCollectorImage: !Ref OpenTelemetryCollectorImage
