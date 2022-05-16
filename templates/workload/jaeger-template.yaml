@@ -47,17 +47,36 @@ Parameters:
     Type: String
   StorageBackend:
     Type: String
-    AllowedValues: [ 'InMemory', 'Elasticseach', 'Cassandra' ]
+    AllowedValues: [ 'InMemory', 'Elasticsearch' ]
   InternalLoadBalancer:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
   OpenTelemetryCollector:
     Type: String
     AllowedValues: [ 'Yes', 'No' ]
+
+# Otel Collector parameters  
   OpenTelemetryCollectorImage:
     Type: String
   OpenTelemetryCollectorVersion:
     Type: String
+  MemoryBallastPercentage:
+    Type: Number
+  EnableZPages:
+    Type: String
+  EnablePprof:
+    Type: String
+  EnableSPM:
+    Type: String
+  CollectorCpu:
+    Type: Number
+  CollectorMemory:
+    Type: Number
+  MinCollectorCount:
+    Type: Number
+  MaxCollectorCount:
+    Type: Number
+
 # Elasticsearch parameters
   ESEngineVersion: 
     Type: String
@@ -80,7 +99,9 @@ Parameters:
     AllowedValues: [ 'Yes', 'No' ]
   ExportMetrics:
     Type: String
-    AllowedValues: [ 'Yes', 'No' ]
+    AllowedValues: [ 'Disabled', 'UseExistingWorkspace', 'CreateNewWorkspace' ]
+  PrometheusWorkspaceId:
+    Type: String
   ScrapeIntervalSeconds:  
     Type: Number
   ScrapeTimeoutSeconds:
@@ -123,13 +144,13 @@ Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
   InternalLoadBalancer: !Equals [!Ref InternalLoadBalancer, 'Yes']
-  ExportMetrics: !Equals [!Ref ExportMetrics, 'Yes']
+  ExportMetrics: !Not [!Equals [!Ref ExportMetrics, 'Disabled']]
   EnableContainerInsights: !Equals [!Ref EnableContainerInsights, 'Yes']
   OpenTelemetryCollector: !Equals [!Ref OpenTelemetryCollector, 'Yes']
   CreateVpcEndpoints: !Equals [!Ref CreateVpcEndpoints, 'Yes']
 
   InMemoryStorage: !Equals [!Ref StorageBackend, 'InMemory']
-  ElasticseachStorage: !Equals [!Ref StorageBackend, 'Elasticseach']
+  ElasticsearchStorage: !Equals [!Ref StorageBackend, 'Elasticsearch']
 
   HttpsProtocol: !Not [!Equals [!Ref Certificate, 'Disabled']]
   CustomDomainName: !Not [!Equals [!Ref PublicDNS, 'Disabled']]
@@ -171,6 +192,18 @@ Resources:
         - Key: deletion_protection.enabled
           Value: "false"
 
+  MetricsBackendStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/workload/jaeger-metrics-backend-template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        ExportMetrics: !Ref ExportMetrics
+        PrometheusWorkspaceId: !Ref PrometheusWorkspaceId
+
   OtelStack:
     Type: AWS::CloudFormation::Stack
     Condition: OpenTelemetryCollector
@@ -189,11 +222,25 @@ Resources:
         PrivateSubnet2ID: !Ref PrivateSubnet2ID
         PrivateSubnet3ID: !Ref PrivateSubnet3ID
         # Jaeger parameters
+        ClusterName: !Ref Cluster
         ClusterArn: !GetAtt Cluster.Arn
         LoadBalancerArn: !Ref LoadBalancer
         JaegerEndpoint: !If [CustomDomainName, !Sub '${SubdomainName}.${DomainName}', !GetAtt LoadBalancer.DNSName]
+        # Otel Collector parameters  
         OpenTelemetryCollectorImage: !Ref OpenTelemetryCollectorImage
         OpenTelemetryCollectorVersion: !Ref OpenTelemetryCollectorVersion
+        MemoryBallastPercentage: !Ref MemoryBallastPercentage
+        EnableZPages: !Ref EnableZPages
+        EnablePprof: !Ref EnablePprof
+        EnableSPM: !Ref EnableSPM
+        CollectorCpu: !Ref CollectorCpu
+        CollectorMemory: !Ref CollectorMemory
+        MinCollectorCount: !Ref MinCollectorCount
+        MaxCollectorCount: !Ref MaxCollectorCount
+        # Prometheus parameterss
+        ExportMetrics: !Ref ExportMetrics
+        PrometheusWorkspaceArn: !GetAtt MetricsBackendStack.Outputs.PrometheusWorkspaceArn
+        PrometheusWriteEndpoint: !GetAtt MetricsBackendStack.Outputs.PrometheusWriteEndpoint
 
   DNSStack:
     Type: AWS::CloudFormation::Stack
@@ -238,12 +285,15 @@ Resources:
         LoadBalancerArn: !Ref LoadBalancer
         LoadBalancerDomainName: !GetAtt LoadBalancer.DNSName
         JaegerVersion: !Ref JaegerVersion
-        ExportMetrics: !Ref ExportMetrics
+        ExportMetrics: !Ref ExportMetrics 
+        EnableSPM: !Ref EnableSPM
         CertificateArn: !GetAtt DNSStack.Outputs.CertificateArn
+        # Prometheus parameters
+        PrometheusWorkspaceId: !GetAtt MetricsBackendStack.Outputs.PrometheusWorkspaceId
 
   ElasticsearchStack:
     Type: AWS::CloudFormation::Stack
-    Condition: ElasticseachStorage
+    Condition: ElasticsearchStorage
     Properties:
       TemplateURL: !Sub
         - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/workload/jaeger-storage-elasticsearch-template.yaml'
@@ -289,12 +339,14 @@ Resources:
         PrivateSubnet2ID: !Ref PrivateSubnet2ID
         PrivateSubnet3ID: !Ref PrivateSubnet3ID
         ClusterArn: !GetAtt Cluster.Arn
+        PrometheusWorkspaceArn: !GetAtt MetricsBackendStack.Outputs.PrometheusWorkspaceArn
+        PrometheusWriteEndpoint: !GetAtt MetricsBackendStack.Outputs.PrometheusWriteEndpoint
         ScrapeTargets:
           !If 
             - InMemoryStorage
             - !GetAtt InMemoryStack.Outputs.ScrapeTargets
             - !If 
-                - ElasticseachStorage
+                - ElasticsearchStorage
                 - !GetAtt ElasticsearchStack.Outputs.ScrapeTargets
                 - !Ref "AWS::NoValue"
         ScrapeIntervalSeconds: !Ref ScrapeIntervalSeconds

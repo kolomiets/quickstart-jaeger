@@ -30,13 +30,20 @@ Parameters:
     Type: String
   ExportMetrics:
     Type: String
+    AllowedValues: [ 'Disabled', 'UseExistingWorkspace', 'CreateNewWorkspace' ]
+  EnableSPM:
+    Type: String
     AllowedValues: [ 'Yes', 'No' ]
   CertificateArn:
+    Type: String
+  # Metrics
+  PrometheusWorkspaceId:
     Type: String
 
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
-  ExportMetrics: !Equals [!Ref ExportMetrics, 'Yes']
+  ExportMetrics: !Not [!Equals [!Ref ExportMetrics, 'Disabled']]
+  EnableSPM: !Equals [!Ref EnableSPM, 'Yes']
   CertificateProvided: !Not [!Equals [!Ref CertificateArn, '']]
   NoCertificateProvided: !Equals [!Ref CertificateArn, '']
 
@@ -168,23 +175,38 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
+        Version: "2012-10-17"
         Statement:
           - Action: sts:AssumeRole
             Effect: Allow
             Principal:
               Service: ecs-tasks.amazonaws.com
-        Version: "2012-10-17"
+      Policies:
+        - !If 
+          - EnableSPM
+          - PolicyName: jaeger-all-in-one-prometheus-access
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - aps:QueryMetrics
+                    - aps:GetLabels
+                    - aps:GetSeries
+                    - aps:GetMetricMetadata
+                  Resource: !Sub "arn:${AWS::Partition}:aps:${AWS::Region}:${AWS::AccountId}:workspace/${PrometheusWorkspaceId}"
+          - !Ref "AWS::NoValue"
 
   ExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
+        Version: "2012-10-17"
         Statement:
           - Action: sts:AssumeRole
             Effect: Allow
             Principal:
               Service: ecs-tasks.amazonaws.com
-        Version: "2012-10-17"
       Policies:
         - PolicyName: jaeger-all-in-one-execution-policy
           PolicyDocument:
@@ -206,6 +228,12 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Sub quickstart-jaeger-all-in-one-${EnvironmentName}
+      Cpu: "1024"
+      Memory: "2048"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [ FARGATE ]
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
       ContainerDefinitions:
         - Name: jaeger-all-in-one
           Essential: true
@@ -234,13 +262,33 @@ Resources:
           Environment:
             - Name: SPAN_STORAGE_TYPE
               Value: memory
-      Cpu: "1024"
-      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
-      Memory: "2048"
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      TaskRoleArn: !GetAtt TaskRole.Arn
+            - !If 
+              - EnableSPM
+              - Name: METRICS_STORAGE_TYPE
+                Value: prometheus
+              - !Ref "AWS::NoValue" 
+            - !If 
+              - EnableSPM
+              - Name: PROMETHEUS_SERVER_URL
+                Value: !Sub "http://localhost:9090/workspaces/${PrometheusWorkspaceId}"
+              - !Ref "AWS::NoValue" 
+        - !If 
+          - EnableSPM
+          - Name: sigv4-proxy
+            Image: public.ecr.aws/aws-observability/aws-sigv4-proxy:latest # TODO
+            Essential: true
+            Command:
+              - "--port=:9090"
+              - "--name=aps"
+              - !Sub "--region=${AWS::Region}"
+              - !Sub "--host=aps-workspaces.${AWS::Region}.amazonaws.com"
+            LogConfiguration:
+              LogDriver: awslogs
+              Options:
+                awslogs-group: !Ref LogGroup
+                awslogs-stream-prefix: jaeger-all-in-one-sigv4-proxy
+                awslogs-region: !Ref AWS::Region
+          - !Ref "AWS::NoValue" 
 
 # Service
   Service:
@@ -277,10 +325,17 @@ Resources:
             - !Ref PrivateSubnet2ID
             - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
       TaskDefinition: !Ref TaskDefinition
-    DependsOn:
-      - Listener14250
-      - Listener14268
-      # - Listener14269
+      Tags:
+        # A necessary trick to force CloudFormation to wait until all listeners are created.
+        # We extract listener ID from ARN, as not all characters are allowed in tags. ARN format: 
+        # arn:{partition}:elasticloadbalancing:{region}:{account-id}:listener/net/{nlb-name}/{nlb-id}/{listener-id}
+        - Key: ListenerIds
+          Value: !Join
+            - ' '
+            - - !Select [4, !Split ['/', !Select [5, !Split [':', !Ref Listener14250]]]] 
+              - !Select [4, !Split ['/', !Select [5, !Split [':', !Ref  Listener14268]]]]
+              - !Select [4, !Split ['/', !Select [5, !Split [':', !If [CertificateProvided, !Ref HttpsListener, !Ref HttpListener]]]]] 
+              - !If [ExportMetrics, !Select [4, !Split ['/', !Select [ 5, !Split [':', !Ref  Listener14269]]]], !Ref 'AWS::NoValue']
 
   ServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
