@@ -1,0 +1,20 @@
+version: "3.5"
+services:
+  otel_collector:
+    networks:
+      - backend
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - "./otel-collector-config.yml:/etc/otelcol/otel-collector-config.yml"
+    command: --config /etc/otelcol/otel-collector-config.yml
+    environment:
+      - OTEL_COLLECTOR_HOST=$OTEL_COLLECTOR_HOST
+  microsim:
+    networks:
+      - backend
+    image: yurishkuro/microsim:0.2.0
+    command: "-j http://otel_collector:14278/api/traces -d 24h -s 500ms"
+    depends_on:
+      - otel_collector
+networks:
+  backend:

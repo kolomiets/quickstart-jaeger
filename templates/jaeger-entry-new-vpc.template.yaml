@@ -57,6 +57,14 @@ Metadata:
           - OpenTelemetryCollector
           - OpenTelemetryCollectorImage
           - OpenTelemetryCollectorVersion
+          - MemoryBallastPercentage
+          - EnableZPages
+          - EnablePprof
+          - EnableSPM
+          - CollectorCpu
+          - CollectorMemory
+          - MinCollectorCount
+          - MaxCollectorCount
       - Label:
           default: "[Only for Elasticsearch backend] Elasticsearch configuration"
         Parameters:
@@ -72,6 +80,7 @@ Metadata:
         Parameters:
           - EnableContainerInsights
           - ExportMetrics
+          - PrometheusWorkspaceId
           - ScrapeIntervalSeconds
           - ScrapeTimeoutSeconds
           - ClusterMetricsCollectionInterval
@@ -131,6 +140,22 @@ Metadata:
         default: OpenTelemetry Collector image
       OpenTelemetryCollectorVersion:
         default: OpenTelemetry Collector version
+      MemoryBallastPercentage:
+        default: Memory ballast percentage
+      EnableZPages:
+        default: Enable zPages
+      EnablePprof:
+        default: Enable pprof
+      EnableSPM:
+        default: Enable Service Performance Monitoring
+      CollectorCpu:
+        default: OpenTelemetry Collector CPU
+      CollectorMemory:
+        default: OpenTelemetry Collector Memory
+      MinCollectorCount:
+        default: Minimum number of OpenTelemetry Collector instances
+      MaxCollectorCount:
+        default: Maximum number of OpenTelemetry Collector instances
     # Elasticsearch configuration
       ESEngineVersion: 
         default: Elasticsearch version
@@ -150,7 +175,9 @@ Metadata:
       EnableContainerInsights:
         default: Enable Amazon CloudWatch Container Inrights
       ExportMetrics:
-        default: Export Jaeger metrics
+        default: Export Prometheus metrics
+      PrometheusWorkspaceId:
+        default: Prometheus Workspace Id
       ScrapeIntervalSeconds:
         default: Metrics scrape interval
       ScrapeTimeoutSeconds:
@@ -263,7 +290,7 @@ Parameters:
   StorageBackend:
     Type: String
     Default: 'InMemory'
-    AllowedValues: [ 'InMemory', 'Elasticseach' ]
+    AllowedValues: [ 'InMemory', 'Elasticsearch' ]
     Description: Jaeger storage backend.
   InternalLoadBalancer:
     Type: String
@@ -279,12 +306,47 @@ Parameters:
     Description: Choose "Yes" to deploy OpenTelemetry Collector in fron of Jaeger.
   OpenTelemetryCollectorImage:
     Type: String
-    Default: otel/opentelemetry-collector
+    Default: otel/opentelemetry-collector-contrib
     Description: Docker image for the OpenTelemetry Collector
   OpenTelemetryCollectorVersion:
     Type: String
     Default: '0.50.0'
     Description: Version of the OpenTelemetry Collector.
+  MemoryBallastPercentage:
+    Type: Number
+    Default: 0
+    Description: Memory balast percentage. "0" disables memory ballast. See https://github.com/open-telemetry/opentelemetry-collector/blob/main/extension/ballastextension/README.md for further details.
+  EnableZPages:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'No'
+    Description: Choose "Yes" to enable zPages for OpenTelemetry Collector. See https://github.com/open-telemetry/opentelemetry-collector/tree/main/extension/zpagesextension for further details.
+  EnablePprof:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'No'
+    Description: Choose "Yes" to enable pprof for OpenTelemetry Collector. See https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/extension/pprofextension for further details.
+  EnableSPM:
+    Type: String
+    AllowedValues: [ 'Yes', 'No' ]
+    Default: 'No'
+    Description: Choose "Yes" to enable service performance monitoring metrics. See https://www.jaegertracing.io/docs/1.34/spm/ for further details.
+  CollectorCpu:
+    Type: Number
+    Default: 256
+    Description: OpenTelemetry Collector CPU. See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html for supported values. 
+  CollectorMemory:
+    Type: Number
+    Default: 512
+    Description: OpenTelemetry Collector Memory. See https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html for supported values.
+  MinCollectorCount:
+    Type: Number
+    Default: 1
+    Description: Minimum number of OpenTelemetry Collector instances.
+  MaxCollectorCount:
+    Type: Number
+    Default: 3
+    Description: Maximum number of OpenTelemetry Collector instances.
 
 # Elasticsearch parameters
   ESEngineVersion: 
@@ -332,9 +394,15 @@ Parameters:
       Container Insights ensure performance metrics are available in CloudWatch.
   ExportMetrics:
     Type: String
-    AllowedValues: [ 'Yes', 'No' ]
-    Default: 'No'
-    Description: Choose "Yes" to export Jaeger and ECS cluster metrics to Amazon Managed Service for Prometheus.
+    AllowedValues: [ 'Disabled', 'UseExistingWorkspace', 'CreateNewWorkspace' ]
+    Default: 'Disabled'
+    Description: |
+      Choose "UseExisting" to provide Amazon Managed Service for Prometheus workspace Id where Jaeger metrics should be exported. 
+      Choose "CreateNew" to provision a Amazon Managed Service for Prometheus workspace and export Jaeger metrics there.
+  PrometheusWorkspaceId:
+    Type: String
+    Description: Provide Amazon Managed Service for Prometheus workspace Id if you selected "UseExisting" above.
+    Default: ''
   ScrapeIntervalSeconds:  
     Type: Number
     Default: 15
@@ -478,6 +546,14 @@ Resources:
         OpenTelemetryCollector: !Ref OpenTelemetryCollector
         OpenTelemetryCollectorImage: !Ref OpenTelemetryCollectorImage
         OpenTelemetryCollectorVersion: !Ref OpenTelemetryCollectorVersion
+        MemoryBallastPercentage: !Ref MemoryBallastPercentage
+        EnableZPages: !Ref EnableZPages
+        EnablePprof: !Ref EnablePprof
+        EnableSPM: !Ref EnableSPM
+        CollectorCpu: !Ref CollectorCpu
+        CollectorMemory: !Ref CollectorMemory
+        MinCollectorCount: !Ref MinCollectorCount
+        MaxCollectorCount: !Ref MaxCollectorCount
         # Elasticsearch parameters
         ESEngineVersion: !Ref ESEngineVersion 
         ESInstanceCount: !Ref ESInstanceCount
@@ -489,6 +565,7 @@ Resources:
         # Metrics Scrape parameters
         EnableContainerInsights: !Ref EnableContainerInsights
         ExportMetrics: !Ref ExportMetrics
+        PrometheusWorkspaceId: !Ref PrometheusWorkspaceId
         ScrapeIntervalSeconds: !Ref ScrapeIntervalSeconds
         ScrapeTimeoutSeconds: !Ref ScrapeTimeoutSeconds
         ClusterMetricsCollectionInterval: !Ref ClusterMetricsCollectionInterval

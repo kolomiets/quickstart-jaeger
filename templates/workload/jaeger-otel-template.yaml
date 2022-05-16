@@ -20,49 +20,183 @@ Parameters:
     Type: String
     Default: ''
 # Jaeger parameters
+  ClusterName:
+    Type: String
   ClusterArn:
     Type: String
   LoadBalancerArn:
     Type: String
   JaegerEndpoint:
     Type: String
+# Otel Collector parameters  
   OpenTelemetryCollectorImage:
     Type: String
   OpenTelemetryCollectorVersion:
     Type: String
+  MemoryBallastPercentage:
+    Type: Number
+  EnableZPages:
+    Type: String
+  EnablePprof:
+    Type: String
+  EnableSPM:
+    Type: String
+  CollectorCpu:
+    Type: Number
+  CollectorMemory:
+    Type: Number
+  MinCollectorCount:
+    Type: Number
+  MaxCollectorCount:
+    Type: Number
+# Prometheus parameters
+  ExportMetrics:
+    Type: String
+    AllowedValues: [ 'Disabled', 'UseExistingWorkspace', 'CreateNewWorkspace' ]
+  PrometheusWorkspaceArn: 
+    Type: String
+  PrometheusWriteEndpoint: 
+    Type: String
 
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
+  EnableZPages: !Equals [!Ref EnableZPages, 'Yes']
+  EnablePprof: !Equals [!Ref EnablePprof, 'Yes']
+  EnableSPM: !Equals [!Ref EnableSPM, 'Yes']
+  MemoryBallastEnabled: !Not [!Equals [!Ref MemoryBallastPercentage, 0]]
+  ExportMetrics: !Not [!Equals [!Ref ExportMetrics, 'Disabled']]
 
 Resources:
 
-# Configuration
-  ConfigurationParameter:
+  BaseConfigurationParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: Jaeger OpenTelemetry Collector configuration
-      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/otel-collector-config"
+      Description: Jaeger OpenTelemetry Collector base configuration
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/otel-config-base"
       Type: String
       Value:
         Fn::Base64:
-          Fn::Sub: |
+          Fn::Sub:
+            - |           
+              extensions:
+                memory_ballast:
+                  size_in_percentage: ${MemoryBallastPercentage}
+                pprof:
+                  endpoint: 0.0.0.0:1777
+                zpages:
+                  endpoint: 0.0.0.0:55679
+                sigv4auth:
+              receivers:
+                otlp:
+                  protocols:
+                    grpc:
+                    http:
+              processors:
+                memory_limiter:
+                  check_interval: 1s
+                  limit_percentage: 80
+                  spike_limit_percentage: 25
+                batch:
+                  timeout: 1s
+              exporters:
+                jaeger:
+                  endpoint: ${JaegerEndpoint}:14250
+                  tls:
+                    insecure: true
+              service:
+                extensions: [${Extensions}]
+                pipelines:
+                  traces:
+                    receivers: [otlp]
+                    processors: [memory_limiter, batch]
+                    exporters: [jaeger]
+            - Extensions: !Join
+                - ','
+                - - !If [MemoryBallastEnabled, memory_ballast, !Ref 'AWS::NoValue']
+                  - !If [EnablePprof, pprof, !Ref 'AWS::NoValue']
+                  - !If [EnableZPages, zpages, !Ref 'AWS::NoValue']
+                  - !If [ExportMetrics, sigv4auth, !Ref 'AWS::NoValue']
+
+  MetricsConfigurationParameter:
+    Type: AWS::SSM::Parameter
+    Condition: ExportMetrics
+    Properties:
+      Description: Jaeger OpenTelemetry Collector metrics configuration
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/otel-config-metrics"
+      Type: String
+      Value:
+        Fn::Base64:
+          Fn::Sub: |  
             receivers:
-              otlp:
-                protocols:
-                  grpc:
-                  http:
+              # scrape Otel Collector's own metrics
+              prometheus:
+                config:
+                  scrape_configs:
+                  - job_name: 'otelcol'
+                    scrape_interval: 10s
+                    static_configs:
+                    - targets: ['localhost:8888']
+                    metric_relabel_configs:
+                      - source_labels: [ __name__ ]
+                        regex: '.*grpc_io.*'
+                        action: drop  
             exporters:
-              logging:
-                loglevel: debug
-              jaeger:
-                endpoint: ${JaegerEndpoint}:14250
-                tls:
-                  insecure: true
+              prometheusremotewrite:
+                endpoint: ${PrometheusWriteEndpoint}
+                auth:
+                  authenticator: sigv4auth
             service:
+              telemetry:
+                metrics:
+                  address: "localhost:8888"
               pipelines:
-                traces:
-                  receivers: [otlp]
-                  exporters: [logging, jaeger]
+                metrics/collector:
+                  receivers: [prometheus]
+                  processors: [batch]
+                  exporters: [prometheusremotewrite]
+
+  SPMConfigurationParameter:
+    Type: AWS::SSM::Parameter
+    Condition: EnableSPM
+    Properties:
+      Description: Jaeger OpenTelemetry Collector SPM configuration
+      Name: !Sub "/quickstart/jaeger/${EnvironmentName}/otel-config-spm"
+      Type: String
+      Value:
+        Fn::Base64: |
+          receivers:
+            otlp/spanmetrics:
+              protocols:
+                grpc:
+                  endpoint: "localhost:55677"
+            # dummy receiver - a pipeline is required to have one.
+            otlp/dummy:
+              protocols:
+                grpc:
+                  endpoint: "localhost:12345"
+          processors:
+            spanmetrics:
+              metrics_exporter: otlp/spanmetrics  
+          exporters:
+            otlp/spanmetrics:
+              endpoint: "localhost:55677"
+              tls:
+                insecure: true
+            file/devnull:
+              path: /dev/null
+          service:
+            pipelines:
+              traces/producespanmetrics:
+                receivers: [otlp]
+                processors: [spanmetrics]
+                exporters: [file/devnull]
+              metrics/producespanmetrics:
+                receivers: [otlp/dummy]
+                exporters: [otlp/spanmetrics]
+              metrics/exportspanmetrics:
+                receivers: [otlp/spanmetrics]
+                processors: [batch]
+                exporters: [prometheusremotewrite]
 
 # Target Groups
   TargetGroup4317:
@@ -72,9 +206,42 @@ Resources:
       Protocol: TCP
       TargetType: ip
       VpcId: !Ref VPCID
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
       Tags:
         - Key: Name
-          Value: !Sub jaeger-4317-${EnvironmentName}
+          Value: !Sub jaeger-4317-${EnvironmentName}-otel
+
+  TargetGroup1777:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: EnablePprof
+    Properties:
+      Port: 1777
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+      Tags:
+        - Key: Name
+          Value: !Sub jaeger-1777-${EnvironmentName}-otel-pprof
+
+  TargetGroup55679:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition: EnableZPages
+    Properties:
+      Port: 55679
+      Protocol: TCP
+      TargetType: ip
+      VpcId: !Ref VPCID
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+      Tags:
+        - Key: Name
+          Value: !Sub jaeger-55679-${EnvironmentName}-otel-zpages
 
 # Listeners
   Listener4317:
@@ -88,18 +255,53 @@ Resources:
       Port: 4317
       Protocol: TCP
 
+  Listener1777:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: EnablePprof
+    Properties:
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroup1777
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
+      Port: 1777
+      Protocol: TCP
+
+  Listener55679:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: EnableZPages
+    Properties:
+      DefaultActions:
+        - TargetGroupArn:
+            Ref: TargetGroup55679
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancerArn
+      Port: 55679
+      Protocol: TCP
+
 # Roles
   TaskRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
+        Version: "2012-10-17"
         Statement:
           - Action: sts:AssumeRole
             Effect: Allow
             Principal:
               Service: ecs-tasks.amazonaws.com
-        Version: "2012-10-17"
-
+      Policies:
+        - !If 
+          - ExportMetrics
+          - PolicyName: metrics-export-task-policy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Action: aps:RemoteWrite
+                  Effect: Allow
+                  Resource: !Ref PrometheusWorkspaceArn
+          - !Ref "AWS::NoValue"
+    
   ExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -124,8 +326,17 @@ Resources:
                   - ssm:GetParameters
                   - ssm:GetParameter
                 Effect: Allow
-                Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ConfigurationParameter}"
-
+                Resource: 
+                  - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${BaseConfigurationParameter}"
+                  - !If
+                    - ExportMetrics
+                    - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${MetricsConfigurationParameter}"
+                    - !Ref 'AWS::NoValue' 
+                  - !If
+                    - EnableSPM
+                    - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SPMConfigurationParameter}"
+                    - !Ref 'AWS::NoValue'  
+                
 # Task Definition
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -136,6 +347,13 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Sub quickstart-jaeger-otel-${EnvironmentName}
+      RequiresCompatibilities: [ FARGATE ]
+      # see https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
+      Cpu: !Sub "${CollectorCpu}"
+      Memory: !Sub "${CollectorMemory}"
+      NetworkMode: awsvpc
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
       Volumes:
         - Name: otel-conf-volume
           Host: {}
@@ -144,13 +362,25 @@ Resources:
           Essential: true
           Image: !Sub ${OpenTelemetryCollectorImage}:${OpenTelemetryCollectorVersion}
           Command:
-            - --config=/otel/conf/jaeger-export.conf
+            - --config=/otel/conf/base.conf
+            - !If [ExportMetrics, --config=/otel/conf/metrics.conf, !Ref 'AWS::NoValue']
+            - !If [EnableSPM, --config=/otel/conf/spm.conf, !Ref 'AWS::NoValue']
           DependsOn:
           - Condition: COMPLETE
             ContainerName: jaeger-otel-config
           PortMappings:
             - ContainerPort: 4317 # Default endpoint for OpenTelemetry receiver
               Protocol: tcp
+            - !If 
+              - EnablePprof
+              - ContainerPort: 1777 # pprof port
+                Protocol: tcp
+              - !Ref "AWS::NoValue"
+            - !If 
+              - EnableZPages
+              - ContainerPort: 55679 # zpages port
+                Protocol: tcp
+              - !Ref "AWS::NoValue"
           MountPoints:
             - ContainerPath: /otel/conf
               SourceVolume: otel-conf-volume
@@ -165,10 +395,24 @@ Resources:
           Essential: false
           Command:
             - -c
-            - echo $OTEL_CONFIG | base64 -d - | tee /otel/conf/jaeger-export.conf
+            - !Join
+              - ';'
+              - - "echo $OTEL_CONFIG_BASE | base64 -d - | tee /otel/conf/base.conf"
+                - !If [ExportMetrics, "echo $OTEL_CONFIG_METRICS | base64 -d - | tee /otel/conf/metrics.conf", !Ref 'AWS::NoValue']
+                - !If [EnableSPM, "echo $OTEL_CONFIG_SPM | base64 -d - | tee /otel/conf/spm.conf", !Ref 'AWS::NoValue']
           Secrets:
-            - Name: OTEL_CONFIG
-              ValueFrom: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ConfigurationParameter}"
+            - Name: OTEL_CONFIG_BASE
+              ValueFrom: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${BaseConfigurationParameter}"
+            - !If 
+              - ExportMetrics
+              - Name: OTEL_CONFIG_METRICS
+                ValueFrom: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${MetricsConfigurationParameter}"
+              - !Ref "AWS::NoValue"
+            - !If 
+              - EnableSPM
+              - Name: OTEL_CONFIG_SPM
+                ValueFrom: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SPMConfigurationParameter}"
+              - !Ref "AWS::NoValue"
           MountPoints:
             - ContainerPath: /otel/conf
               SourceVolume: otel-conf-volume
@@ -178,13 +422,6 @@ Resources:
               awslogs-group: !Ref LogGroup
               awslogs-stream-prefix: jaeger-otel-config
               awslogs-region: !Ref AWS::Region
-      Cpu: "1024"
-      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
-      Memory: "2048"
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      TaskRoleArn: !GetAtt TaskRole.Arn
 
 # Service
   Service:
@@ -192,13 +429,25 @@ Resources:
     Properties:
       ServiceName: jaeger-otel
       Cluster: !Ref ClusterArn
-      DesiredCount: 1
+      DesiredCount: !Ref MinCollectorCount
       HealthCheckGracePeriodSeconds: 30
       LaunchType: FARGATE
       LoadBalancers:
         - ContainerName: jaeger-otel
           ContainerPort: 4317
           TargetGroupArn: !Ref TargetGroup4317
+        - !If 
+          - EnablePprof
+          - ContainerName: jaeger-otel
+            ContainerPort: 1777
+            TargetGroupArn: !Ref TargetGroup1777
+          - !Ref "AWS::NoValue"
+        - !If 
+          - EnableZPages
+          - ContainerName: jaeger-otel
+            ContainerPort: 55679
+            TargetGroupArn: !Ref TargetGroup55679
+          - !Ref "AWS::NoValue"
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
@@ -209,6 +458,57 @@ Resources:
             - !Ref PrivateSubnet2ID
             - !If [Using3AvailabilityZones, !Ref PrivateSubnet3ID, !Ref 'AWS::NoValue']
       TaskDefinition: !Ref TaskDefinition
+      Tags:
+        # A necessary trick to force CloudFormation to wait until all listeners are created.
+        # We extract listener ID from ARN, as not all characters are allowed in tags. ARN format: 
+        # arn:{partition}:elasticloadbalancing:{region}:{account-id}:listener/net/{nlb-name}/{nlb-id}/{listener-id}
+        - Key: ListenerIds
+          Value: !Join
+            - ' '
+            - - !Select [4, !Split ['/', !Select [5, !Split [':', !Ref  Listener4317]]]]
+              - !If [EnablePprof, !Select [4, !Split ['/', !Select [5, !Split [':', !Ref Listener1777]]]], !Ref 'AWS::NoValue']
+              - !If [EnableZPages, !Select [4, !Split [ '/', !Select [5, !Split [':', !Ref Listener55679]]]], !Ref 'AWS::NoValue']
+
+# Scaling Policies
+
+  ServiceAutoScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxCollectorCount
+      MinCapacity: !Ref MinCollectorCount
+      ResourceId: !Sub "service/${ClusterName}/${Service.Name}"
+      RoleARN: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+  ServiceCPUAutoScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: CPUAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ServiceAutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        DisableScaleIn: True # consider memory-based scaling more important
+        TargetValue: 75 
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+
+  ServiceMemoryAutoScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: MemoryAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ServiceAutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 75 
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification: 
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+
+# Security Group
 
   ServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -227,3 +527,19 @@ Resources:
           IpProtocol: tcp
           FromPort: 4317
           ToPort: 4317
+        - !If 
+          - EnablePprof
+          - CidrIp: !Ref VPCCIDR
+            Description: Allow ECS Service access (port 1777) from within VPC
+            IpProtocol: tcp
+            FromPort: 1777
+            ToPort: 1777
+          - !Ref "AWS::NoValue"
+        - !If 
+          - EnableZPages
+          - CidrIp: !Ref VPCCIDR
+            Description: Allow ECS Service access (port 55679) from within VPC
+            IpProtocol: tcp
+            FromPort: 55679
+            ToPort: 55679
+          - !Ref "AWS::NoValue"

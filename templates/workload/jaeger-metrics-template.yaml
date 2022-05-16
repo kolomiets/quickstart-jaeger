@@ -18,6 +18,11 @@ Parameters:
 # Jaeger parameters
   ClusterArn:
     Type: String
+# Prometheus parameters
+  PrometheusWorkspaceArn: 
+    Type: String
+  PrometheusWriteEndpoint: 
+    Type: String
 # Metrics Scrape parameters
   ScrapeTargets:
     Type: List<String>
@@ -32,11 +37,6 @@ Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
 
 Resources:
-  APSWorkspace:
-    Type: AWS::APS::Workspace
-    Properties:
-      Alias: !Sub jaeger-metrics-${EnvironmentName}
-
   ConfigurationParameter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -95,8 +95,7 @@ Resources:
                 receivers: [awsecscontainermetrics]
                 processors: [filter]
                 exporters: [logging, awsprometheusremotewrite]
-        - PrometheusWriteEndpoint: !Sub  ${APSWorkspace.PrometheusEndpoint}api/v1/remote_write
-          ScrapeTargets:
+        - ScrapeTargets:
             Fn::Sub:
               - "[ '${Targets}' ] "
               - Targets: !Join ["','", !Ref ScrapeTargets]
@@ -118,7 +117,7 @@ Resources:
             Statement:
               - Action: aps:RemoteWrite
                 Effect: Allow
-                Resource: !Ref APSWorkspace
+                Resource: !Ref PrometheusWorkspaceArn
               - Action:
                   - logs:PutLogEvents
                   - logs:CreateLogGroup

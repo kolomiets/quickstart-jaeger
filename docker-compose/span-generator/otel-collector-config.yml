@@ -1,0 +1,21 @@
+receivers:
+  jaeger:
+    protocols:
+      thrift_http:
+        endpoint: "0.0.0.0:14278"
+
+exporters:
+  otlp:
+    endpoint: ${OTEL_COLLECTOR_HOST}:4317
+    tls:
+      insecure: true
+
+processors:
+  batch:
+
+service:
+  pipelines:
+    traces:
+      receivers: [jaeger]
+      processors: [batch]
+      exporters: [otlp]

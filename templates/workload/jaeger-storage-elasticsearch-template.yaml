@@ -29,7 +29,7 @@ Parameters:
     Type: String
   ExportMetrics:
     Type: String
-    AllowedValues: [ 'Yes', 'No' ]
+    AllowedValues: [ 'Disabled', 'UseExistingWorkspace', 'CreateNewWorkspace' ]
   CertificateArn:
     Type: String
 # Elasticsearch parameters
@@ -50,7 +50,7 @@ Parameters:
 
 Conditions:
   Using3AvailabilityZones:  !Not [!Equals [!Ref PrivateSubnet3ID, '']]
-  ExportMetrics: !Equals [!Ref ExportMetrics, 'Yes']
+  ExportMetrics: !Not [!Equals [!Ref ExportMetrics, 'Disabled']]
   CertificateProvided: !Not [!Equals [!Ref CertificateArn, '']]
   NoCertificateProvided: !Equals [!Ref CertificateArn, '']
 

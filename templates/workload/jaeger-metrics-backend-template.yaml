@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys Prometheus metrics backend resources (TODO)
+
+Parameters:
+# Basic Configuration
+  EnvironmentName:
+    Type: String
+  ExportMetrics:
+    Type: String
+    AllowedValues: [ 'Disabled', 'UseExistingWorkspace', 'CreateNewWorkspace' ]
+  PrometheusWorkspaceId:
+    Type: String
+
+Conditions:
+  CreateNewWorkspace: !Equals [!Ref ExportMetrics, 'CreateNewWorkspace']
+
+Resources:
+
+  APSWorkspace:
+    Type: AWS::APS::Workspace
+    Condition: CreateNewWorkspace
+    Properties:
+      Alias: !Sub jaeger-metrics-${EnvironmentName}
+
+Outputs:
+  PrometheusWorkspaceId: 
+    Value: !If [CreateNewWorkspace, !GetAtt APSWorkspace.WorkspaceId, !Ref PrometheusWorkspaceId] 
+  PrometheusWorkspaceArn: 
+    Value: !If
+      - CreateNewWorkspace 
+      - !Ref APSWorkspace
+      - !Sub "arn:${AWS::Partition}:aps:${AWS::Region}:${AWS::AccountId}:workspace/${PrometheusWorkspaceId}"
+  PrometheusWriteEndpoint: 
+    Value: !If
+      - CreateNewWorkspace
+      - !Sub "${APSWorkspace.PrometheusEndpoint}api/v1/remote_write"
+      - !Sub "https://aps-workspaces.${AWS::Region}.amazonaws.com/workspaces/${PrometheusWorkspaceId}/api/v1/remote_write"

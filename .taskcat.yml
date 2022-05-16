@@ -3,6 +3,8 @@ project:
   shorten_stack_name: true
   template: templates/jaeger-entry-new-vpc.template.yaml
   parameters:
+    NumberOfAZs: 2
+    AvailabilityZones: $[taskcat_genaz_2]
     QSS3BucketName: $[taskcat_autobucket]
     QSS3BucketRegion: us-east-1
     QSS3KeyPrefix: quickstart-jaeger/
@@ -10,31 +12,61 @@ project:
 
 tests:
 
-  inmemory-2-az-with-defaults:
+  # The most basic Jaeger deployment - all defaults
+  inmemory-with-defaults:
     parameters:
-      AvailabilityZones: $[taskcat_genaz_2]
-      NumberOfAZs: 2
+      EnvironmentName: simple 
     regions:
     - eu-west-1
 
-  inmemory-2-az-with-optional-settings:
+  # Jaeger with Otel Collector in front
+  inmemory-with-otel:
     parameters:
-      AvailabilityZones: $[taskcat_genaz_2]
-      NumberOfAZs: 2
-      StorageBackend: InMemory
+      EnvironmentName: otel 
+      OpenTelemetryCollector: 'Yes'
+    regions:
+    - eu-west-1
+
+  # Jaeger with Otel Collector + Prometheus metrics
+  inmemory-with-otel-and-metrics:
+    parameters:
+      EnvironmentName: otel-with-metrics 
+      ExportMetrics: 'CreateNewWorkspace'
+      OpenTelemetryCollector: 'Yes'
+    regions:
+    - eu-west-1
+
+  # Jaeger with SPM configured. See https://www.jaegertracing.io/docs/1.34/spm/ for details
+  inmemory-with-spm:
+    parameters:
+      EnvironmentName: spm 
+      ExportMetrics: 'CreateNewWorkspace'
+      OpenTelemetryCollector: 'Yes'
+      EnableZPages: 'Yes'
+      EnableSPM: 'Yes'
+    regions:
+    - eu-west-1
+
+  # Jaeger deployment with most optional features enabled
+  inmemory-with-optional-features:
+    parameters:
+      EnvironmentName: optional-features
       DomainName: jaeger.com
       PrivateDNS: CreateNew
-      ExportMetrics: 'Yes'
+      CreateVpcEndpoints: 'Yes'
+      ExportMetrics: 'CreateNewWorkspace'
       EnableContainerInsights: 'Yes'
       OpenTelemetryCollector: 'Yes'
-      CreateVpcEndpoints: 'Yes'
+      MemoryBallastPercentage: 10
+      EnableZPages: 'Yes'
+      EnablePprof: 'Yes'
+      EnableSPM: 'Yes'
     regions:
     - us-east-1
 
-  elasticsearch-2-az-with-defaults:
+  elasticsearch-with-defaults:
     parameters:
-      AvailabilityZones: $[taskcat_genaz_2]
-      NumberOfAZs: 2
-      StorageBackend: Elasticseach
+      EnvironmentName: es
+      StorageBackend: Elasticsearch
     regions:
     - eu-west-1
