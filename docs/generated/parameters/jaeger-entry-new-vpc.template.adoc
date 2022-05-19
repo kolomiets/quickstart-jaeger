@@ -12,8 +12,7 @@ Multiple Jaeger environments with different names can be deployed in the same re
 [width="100%",cols="16%,11%,73%",options="header",]
 |===
 |Parameter label (name) |Default value|Description|Number of Availability Zones
-(`NumberOfAZs`)|`2`|Number of Availability Zones to use in the VPC. This must match your selections in the list of Availability Zones parameter.|Availability Zones
-(`AvailabilityZones`)|`**__Requires input__**`|List of Availability Zones to use for the subnets in the VPC. Pick only as many as match what was selected for Number of Availability Zones (NumberofAZs).|VPC CIDR
+(`NumberOfAZs`)|`2`|Number of Availability Zones to use in the VPC. This must match your selections in the list of Availability Zones parameter.|VPC CIDR
 (`VPCCIDR`)|`10.0.0.0/16`|CIDR block for the VPC.|Private subnet 1 CIDR
 (`PrivateSubnet1CIDR`)|`10.0.0.0/19`|CIDR block for private subnet 1 located in Availability Zone 1.|Private subnet 2 CIDR
 (`PrivateSubnet2CIDR`)|`10.0.32.0/19`|CIDR block for private subnet 2 located in Availability Zone 2.|Private subnet 3 CIDR
