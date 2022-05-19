@@ -3,8 +3,6 @@ project:
   shorten_stack_name: true
   template: templates/jaeger-entry-new-vpc.template.yaml
   parameters:
-    NumberOfAZs: 2
-    AvailabilityZones: $[taskcat_genaz_2]
     QSS3BucketName: $[taskcat_autobucket]
     QSS3BucketRegion: us-east-1
     QSS3KeyPrefix: quickstart-jaeger/
@@ -64,9 +62,13 @@ tests:
     regions:
     - us-east-1
 
-  elasticsearch-with-defaults:
+  elasticsearch-with-spm:
     parameters:
       EnvironmentName: es
       StorageBackend: Elasticsearch
+      ExportMetrics: 'CreateNewWorkspace'
+      OpenTelemetryCollector: 'Yes'
+      EnableZPages: 'Yes'
+      EnableSPM: 'Yes'
     regions:
     - eu-west-1
